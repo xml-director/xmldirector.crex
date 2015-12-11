@@ -20,22 +20,20 @@ import fs.zipfs
 from contextlib import contextmanager
 
 import plone.api
+from plone.rest import Service
+from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
 from zope.annotation.interfaces import IAnnotations
-from Products.CMFCore import permissions
-from ZPublisher.Iterators import filestream_iterator
 from AccessControl import Unauthorized
 from AccessControl import getSecurityManager
-from plone.registry.interfaces import IRegistry
-
-from plone.rest import Service
+from Products.CMFCore import permissions
+from ZPublisher.Iterators import filestream_iterator
 
 from xmldirector.crex.logger import LOG
 from xmldirector.crex.interfaces import ICRexSettings
-
 from xmldirector.plonecore.interfaces import IWebdavHandle
-
 from zopyx.plone.persistentlogger.logger import IPersistentLogger
+from collective.taskqueue import taskqueue
 
 
 ANNOTATION_KEY = 'xmldirector.plonecore.crex'
@@ -97,16 +95,6 @@ def store_zip(context, zip_filename, target_directory):
                 with zip_in.open(name, 'rb') as fp_in:
                     fp_out.write(fp_in.read())
 
-
-@contextmanager
-def close_and_delete(fp):
-    """ Context manager for closing and deleting a temporary file after usage """
-
-    try:
-        yield fp
-    finally:
-        fp.close()
-        os.unlink(fp.name)
 
 @contextmanager
 def delete_after(filename):
@@ -211,7 +199,6 @@ def temp_zip(suffix='.zip'):
     if not os.path.exists(basedir):
         os.mkdir(basedir)
     fn = tempfile.mkstemp(suffix=suffix, dir=basedir)
-    print fn
     return fn[1]
 
 
@@ -431,7 +418,6 @@ class api_convert(BaseService):
     @timed
     def render(self):
 
-        from collective.taskqueue import taskqueue
 
         task_id = taskqueue.add(
             '{}/xmldirector-test'.format(plone.api.portal.get().absolute_url(1)))
@@ -446,9 +432,9 @@ class api_convert(BaseService):
                 with handle.open('src/word/index.docx', 'rb') as fp_in:
                     fp.write(fp_in.read())
 
-        zip_out = convert_crex(zip_tmp)
+        with delete_after(zip_tmp):
+            zip_out = convert_crex(zip_tmp)
         store_zip(self.context, zip_out, 'current')
-        os.unlink(zip_tmp)
 
         with delete_after(zip_out):
             self.request.response.setHeader(
