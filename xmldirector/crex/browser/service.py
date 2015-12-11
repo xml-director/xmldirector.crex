@@ -173,7 +173,7 @@ def convert_crex(zip_path):
             msg = u'Conversion successful (HTTP code {}, duration: {:2.1f} seconds))'.format(
                 result.status_code, time.time() - ts)
             LOG.info(msg)
-            zip_out = tempfile.mktemp(suffix='.zip')
+            zip_out = temp_zip(suffix='.zip')
             with open(zip_out, 'wb') as fp:
                 fp.write(result.content)
             return zip_out
@@ -203,6 +203,16 @@ def timed(method):
         LOG.info(s)
         return result
     return timed
+
+
+def temp_zip(suffix='.zip'):
+    """ Temporary file for zip files """
+    basedir = os.path.join(tempfile.gettempdir(), 'xmldirector-api')
+    if not os.path.exists(basedir):
+        os.mkdir(basedir)
+    fn = tempfile.mkstemp(suffix=suffix, dir=basedir)
+    print fn
+    return fn[1]
 
 
 class BaseService(Service):
@@ -359,22 +369,24 @@ class api_store(BaseService):
         webdav_handle.makedir(target_dir)
 
         # Write payload/data to ZIP file
-        zip_out = tempfile.mktemp(suffix='.zip')
+        zip_out = temp_zip(suffix='.zip')
         with open(zip_out, 'wb') as fp:
             fp.write(payload['zip'].decode('base64'))
 
         # and unpack it
-        with fs.zipfs.ZipFS(zip_out, 'r') as zip_handle:
-            for name in zip_handle.walkfiles():
-                dest_name = '{}/{}'.format(target_dir, name)
-                dest_dir = os.path.dirname(dest_name)
-                if not webdav_handle.exists(dest_dir):
-                    webdav_handle.makedir(dest_dir)
-                data = zip_handle.open(name, 'rb').read()
-                with webdav_handle.open(dest_name, 'wb') as fp:
-                    fp.write(data)
-                with webdav_handle.open(dest_name + '.sha256', 'wb') as fp:
-                    fp.write(hashlib.sha256(data).hexdigest())
+        with delete_after(zip_out):
+            with fs.zipfs.ZipFS(zip_out, 'r') as zip_handle:
+                for name in zip_handle.walkfiles():
+                    dest_name = '{}/{}'.format(target_dir, name)
+                    dest_dir = os.path.dirname(dest_name)
+                    if not webdav_handle.exists(dest_dir):
+                        webdav_handle.makedir(dest_dir)
+                    data = zip_handle.open(name, 'rb').read()
+                    with webdav_handle.open(dest_name, 'wb') as fp:
+                        fp.write(data)
+                    with webdav_handle.open(dest_name + '.sha256', 'wb') as fp:
+                        fp.write(hashlib.sha256(data).hexdigest())
+
         return dict(msg=u'Saved')
 
 
@@ -392,7 +404,7 @@ class api_get(BaseService):
         files = json_data['files']
 
         handle = self.context.webdav_handle()
-        zip_out = tempfile.mktemp(suffix='.zip')
+        zip_out = temp_zip(suffix='.zip')
         with fs.zipfs.ZipFS(zip_out, 'w') as zip_handle:
             for name in handle.walkfiles():
                 if name.startswith('/'):
@@ -428,7 +440,7 @@ class api_convert(BaseService):
         IPersistentLogger(self.context).log('convert')
 
         handle = self.context.webdav_handle()
-        zip_tmp = tempfile.mktemp(suffix='.zip')
+        zip_tmp = temp_zip(suffix='.zip')
         with fs.zipfs.ZipFS(zip_tmp, 'w') as zip_fp:
             with zip_fp.open('word/index.docx', 'wb') as fp:
                 with handle.open('src/word/index.docx', 'rb') as fp_in:
@@ -436,6 +448,7 @@ class api_convert(BaseService):
 
         zip_out = convert_crex(zip_tmp)
         store_zip(self.context, zip_out, 'current')
+        os.unlink(zip_tmp)
 
         with delete_after(zip_out):
             self.request.response.setHeader(
