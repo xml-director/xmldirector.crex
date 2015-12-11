@@ -23,6 +23,7 @@ import plone.api
 from zope.component import getUtility
 from zope.annotation.interfaces import IAnnotations
 from Products.CMFCore import permissions
+from ZPublisher.Iterators import filestream_iterator
 from AccessControl import Unauthorized
 from AccessControl import getSecurityManager
 from plone.registry.interfaces import IRegistry
@@ -106,6 +107,17 @@ def close_and_delete(fp):
     finally:
         fp.close()
         os.unlink(fp.name)
+
+@contextmanager
+def delete_after(filename):
+    """ Context manager for closing and deleting a temporary file after usage """
+
+    yield None
+
+    try:
+        os.unlink(filename)
+    except OSError:
+        LOG.error('Unable to remove \'{}\''.format(filename))
 
 
 def convert_crex(zip_path):
@@ -392,13 +404,14 @@ class api_get(BaseService):
                                 fp_out.write(fp_in.read())
                         break
 
-        with close_and_delete(open(zip_out, 'rb')) as fp:
+#        with close_and_delete(open(zip_out, 'rb')) as fp:
+        with delete_after(zip_out):
             self.request.response.setHeader(
                 'content-length', str(os.path.getsize(zip_out)))
             self.request.response.setHeader('content-type', 'application/zip')
             self.request.response.setHeader(
                 'content-disposition', 'attachment; filename={}.zip'.format(self.context.getId()))
-            self.request.response.write(fp.read())
+            return filestream_iterator(zip_out)
 
 
 class api_convert(BaseService):
@@ -424,13 +437,13 @@ class api_convert(BaseService):
         zip_out = convert_crex(zip_tmp)
         store_zip(self.context, zip_out, 'current')
 
-        with close_and_delete(open(zip_out, 'rb')) as fp:
+        with delete_after(zip_out):
             self.request.response.setHeader(
                 'content-length', str(os.path.getsize(zip_out)))
             self.request.response.setHeader('content-type', 'application/zip')
             self.request.response.setHeader(
                 'content-disposition', 'attachment; filename={}.zip'.format(self.context.getId()))
-            self.request.response.write(fp.read())
+            return filestream_iterator(zip_out)
 
 
 class api_list(BaseService):
@@ -451,8 +464,9 @@ class api_list_full(BaseService):
         check_permission(permissions.View, self.context)
 
         handle = self.context.webdav_handle()
-        result = list()
+        result = dict()
         for dirname in handle.walkdirs():
-            for d in handle.ilistdirinfo(dirname, full=True):
-                result.append(d)
+            for name, data in handle.ilistdirinfo(dirname, full=True):
+                data['modified_time'] = data['modified_time'].isoformat() # datetime not JSONifyable
+                result[name] = data
         return result
