@@ -1,11 +1,11 @@
 import os
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.1.2'
 
 setup(name='xmldirector.crex',
       version=version,
-      description="XML-Director ",
+      description="Plone/XML-Director integration with c-rex.net",
       long_description=open(os.path.join("docs", "source", "README.rst")).read() + "\n" +
       open(os.path.join("docs", "source", "HISTORY.rst")).read(),
       # Get more strings from
@@ -18,7 +18,7 @@ setup(name='xmldirector.crex',
           "Framework :: Zope2",
           "Topic :: Software Development :: Libraries :: Python Modules",
       ],
-      keywords='xml-director exist-db basex owncloud alfresco existdb Plone XML Python WebDAV',
+      keywords='xml-director DOCX XML C-Rex Plone Python ',
       author='Andreas Jung',
       author_email='info@zopyx.com',
       url='http://pypi.python.org/pypi/xmldirector.crex',
@@ -29,6 +29,10 @@ setup(name='xmldirector.crex',
       zip_safe=False,
       install_requires=[
           'setuptools',
+          'zopyx.plone.persistentlogger',
+          'furl',
+          'plone.rest',
+          'collective.taskqueue',
           'requests',
       ],
       tests_require=['zope.testing'],
