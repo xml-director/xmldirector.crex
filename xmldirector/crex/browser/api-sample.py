@@ -18,8 +18,9 @@ base_url = 'http://localhost:12020/Plone'
 user = 'admin'
 password = 'admin'
 all_headers = {'content-type': 'application/json', 'accept' : 'application/json'}
+nojson_all_headers = {'accept' : 'application/json'}
 
-def send_request(method='GET', path='/@@API', data=None, files=None, headers={}, folder=None, url=None, qs=None):
+def send_request(method='GET', path='/@@API', data=None, files=None, headers={}, folder=None, url=None, qs=None, no_json=False):
 
     f = getattr(requests, method.lower())
     api_url = url if url else base_url
@@ -28,7 +29,10 @@ def send_request(method='GET', path='/@@API', data=None, files=None, headers={},
     api_url += '/{}'.format(path)
     if qs:
         api_url += qs
-    request_headers = all_headers.copy()
+    if no_json:
+        request_headers = nojson_all_headers.copy()
+    else:
+        request_headers = all_headers.copy()
     request_headers.update(headers)
     print method, api_url
 
@@ -109,6 +113,13 @@ pprint.pprint(data)
 print '-'*80
 print 'GET_METADATA'
 result = send_request('GET', 'xmldirector-list-full', url=url)
+verify_result(result)
+data = result.json()
+pprint.pprint(data)
+
+print '-'*80
+print 'TEST'
+result = send_request('POST', 'xmldirector-test', url=url, data=dict(a=1,b=2), no_json=True)
 verify_result(result)
 data = result.json()
 pprint.pprint(data)

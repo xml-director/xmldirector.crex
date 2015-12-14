@@ -84,7 +84,6 @@ def sha256_fp(fp, blocksize=2**20):
 def store_zip(context, zip_filename, target_directory):
     """ Unzip a ZIP file within the given target directory """
 
-    import pdb; pdb.set_trace() 
     handle = context.webdav_handle()
     if handle.exists(target_directory):
         handle.removedir(target_directory, recursive=True, force=True)
@@ -218,7 +217,6 @@ class fs_filestream_iterator(object):
         self.fs_handle.seek(0, 2)
         size = self.fs_handle.tell()
         self.fs_handle.seek(cur_pos, 0)
-        import pdb; pdb.set_trace() 
         return size
 
 
@@ -544,9 +542,10 @@ class api_test(BaseService):
 
     @timed
     def render(self):
-        
+
+        print self.request.form
         task_id = taskqueue.add(
             '{}/xmldirector-test'.format(plone.api.portal.get().absolute_url(1)),
             params=dict(a=2,b=3))
 
-        return {}
+        return {'msg': 'done'}
