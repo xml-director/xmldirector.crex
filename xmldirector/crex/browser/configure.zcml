@@ -94,6 +94,13 @@
     <plone:service
       method="GET"
         for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_get_single"
+        name="xmldirector-get-single"
+    />
+
+    <plone:service
+      method="GET"
+        for="xmldirector.plonecore.connector.IConnector"
         factory=".service.api_list"
         name="xmldirector-list"
     />
