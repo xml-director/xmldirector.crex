@@ -129,8 +129,8 @@
     <plone:service
       method="POST"
         for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_test"
-        name="xmldirector-test"
+        factory=".service.api_store_single"
+        name="xmldirector-store-single"
     />
 
 </configure>

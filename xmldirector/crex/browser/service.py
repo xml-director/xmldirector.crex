@@ -92,9 +92,7 @@ def store_zip(context, zip_filename, target_directory):
         for name in zip_in.walkfiles():
             target_path = '{}/{}'.format(target_directory,
                                          name.replace('/result/', ''))
-            target_dir = os.path.dirname(target_path)
-            if not handle.exists(target_dir):
-                handle.makedir(target_dir, recursive=True)
+            handle.ensuredir(target_path)
             with handle.open(target_path, 'wb') as fp_out:
                 with zip_in.open(name, 'rb') as fp_in:
                     fp_out.write(fp_in.read())
@@ -392,9 +390,7 @@ class api_store(BaseService):
             with fs.zipfs.ZipFS(zip_out, 'r') as zip_handle:
                 for name in zip_handle.walkfiles():
                     dest_name = '{}/{}'.format(target_dir, name)
-                    dest_dir = os.path.dirname(dest_name)
-                    if not webdav_handle.exists(dest_dir):
-                        webdav_handle.makedir(dest_dir)
+                    webdav_handle.ensuredir(dest_name)
                     data = zip_handle.open(name, 'rb').read()
                     with webdav_handle.open(dest_name, 'wb') as fp:
                         fp.write(data)
@@ -538,7 +534,7 @@ class api_hashes(BaseService):
         return result
 
 
-class api_test(BaseService):
+class api_store_single(BaseService):
 
     @timed
     def render(self):
@@ -552,8 +548,8 @@ class api_test(BaseService):
 
         handle = self.context.webdav_handle()
         dirname = os.path.dirname(filename)
-        if not handle.exists(dirname):
-            handle.makedir(dirname, recursive=True)
+        handle.ensuredir(filename)
+        
         with handle.open(filename, 'wb') as fp_out:
             fp_out.write(fp.read())
 #

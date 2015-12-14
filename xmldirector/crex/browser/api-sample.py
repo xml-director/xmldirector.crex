@@ -122,7 +122,7 @@ pprint.pprint(data)
 print '-'*80
 print 'TEST'                                                                                                        
 force_files = dict(file=open('configure.zcml', 'rb'))
-result = send_request('POST', 'xmldirector-test', url=url, data=dict(filename='a/b/c/d.txt'), no_json=True, force_files=force_files)
+result = send_request('POST', 'xmldirector-store-single', url=url, data=dict(filename='a/b/c/d.txt'), no_json=True, force_files=force_files)
 verify_result(result)
 data = result.json()
 pprint.pprint(data)
