@@ -16,6 +16,7 @@ import datetime
 import tempfile
 import requests
 import fnmatch
+import mimetypes
 import fs.zipfs
 from contextlib import contextmanager
 
@@ -24,10 +25,12 @@ from plone.rest import Service
 from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
 from zope.annotation.interfaces import IAnnotations
+from zope.interface import implements
 from AccessControl import Unauthorized
 from AccessControl import getSecurityManager
 from Products.CMFCore import permissions
 from ZPublisher.Iterators import filestream_iterator
+from ZPublisher.Iterators import IStreamIterator
 
 from xmldirector.crex.logger import LOG
 from xmldirector.crex.interfaces import ICRexSettings
@@ -80,6 +83,7 @@ def sha256_fp(fp, blocksize=2**20):
 def store_zip(context, zip_filename, target_directory):
     """ Unzip a ZIP file within the given target directory """
 
+    import pdb; pdb.set_trace() 
     handle = context.webdav_handle()
     if handle.exists(target_directory):
         handle.removedir(target_directory, recursive=True, force=True)
@@ -191,6 +195,30 @@ def timed(method):
         LOG.info(s)
         return result
     return timed
+
+
+class fs_filestream_iterator(object):
+    """ Iterator for 'fs' module filesystems """
+
+    implements(IStreamIterator)
+
+    def __init__(self, fs_handle, streamsize=1<<16):
+        self.streamsize = streamsize
+        self.fs_handle = fs_handle
+
+    def next(self):
+        data = self.fs_handle.read(self.streamsize)
+        if not data:
+            raise StopIteration
+        return data
+
+    def __len__(self):
+        cur_pos = self.fs_handle.tell()
+        self.fs_handle.seek(0, 2)
+        size = self.fs_handle.tell()
+        self.fs_handle.seek(cur_pos, 0)
+        import pdb; pdb.set_trace() 
+        return size
 
 
 def temp_zip(suffix='.zip'):
@@ -411,6 +439,30 @@ class api_get(BaseService):
             self.request.response.setHeader(
                 'content-disposition', 'attachment; filename={}.zip'.format(self.context.getId()))
             return filestream_iterator(zip_out)
+
+
+class api_get_single(BaseService):
+
+    @timed
+    def render(self):
+
+        check_permission(permissions.View, self.context)
+        name = self.request.form['name']
+        mt, encoding = mimetypes.guess_type(os.path.basename(name))
+
+        handle = self.context.webdav_handle()
+        if handle.exists(name):
+            fp = handle.open(name, 'rb')
+            size = handle.getsize(name)
+            self.request.response.setHeader(
+                'content-length', str(size))
+            self.request.response.setHeader('content-type', mt)
+            self.request.response.setHeader(
+                'content-disposition', 'attachment; filename={}'.format(os.path.basename(name)))
+            return fs_filestream_iterator(fp)
+        else:
+            self.request.response.setStatus(403)
+            self.request.response.write(u'Not found: {}'.format(name))
 
 
 class api_convert(BaseService):
