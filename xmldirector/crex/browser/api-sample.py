@@ -20,7 +20,7 @@ password = 'admin'
 all_headers = {'content-type': 'application/json', 'accept' : 'application/json'}
 nojson_all_headers = {'accept' : 'application/json'}
 
-def send_request(method='GET', path='/@@API', data=None, files=None, headers={}, folder=None, url=None, qs=None, no_json=False):
+def send_request(method='GET', path='/@@API', data=None, files=None, headers={}, folder=None, url=None, qs=None, no_json=False, force_files=None):
 
     f = getattr(requests, method.lower())
     api_url = url if url else base_url
@@ -50,11 +50,13 @@ def send_request(method='GET', path='/@@API', data=None, files=None, headers={},
             api_url, 
             auth=HTTPBasicAuth(user, password),
             headers=request_headers,
+            files=force_files,
             data=data)
     else:
         result = f(
             api_url, 
             auth=HTTPBasicAuth(user, password),
+            files=force_files,
             headers=request_headers)
     print result
     return result
@@ -118,8 +120,9 @@ data = result.json()
 pprint.pprint(data)
 
 print '-'*80
-print 'TEST'
-result = send_request('POST', 'xmldirector-test', url=url, data=dict(a=1,b=2), no_json=True)
+print 'TEST'                                                                                                        
+force_files = dict(file=open('configure.zcml', 'rb'))
+result = send_request('POST', 'xmldirector-test', url=url, data=dict(filename='a/b/c/d.txt'), no_json=True, force_files=force_files)
 verify_result(result)
 data = result.json()
 pprint.pprint(data)

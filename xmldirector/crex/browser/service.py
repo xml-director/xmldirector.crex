@@ -543,9 +543,22 @@ class api_test(BaseService):
     @timed
     def render(self):
 
-        print self.request.form
-        task_id = taskqueue.add(
-            '{}/xmldirector-test'.format(plone.api.portal.get().absolute_url(1)),
-            params=dict(a=2,b=3))
+        fp = self.request.form.get('file')
+        filename  = self.request.form.get('filename')
+        if not fp:
+            raise ValueError('No file uploaded')
+        if not filename:
+            raise ValueError('Filename missing')
+
+        handle = self.context.webdav_handle()
+        dirname = os.path.dirname(filename)
+        if not handle.exists(dirname):
+            handle.makedir(dirname, recursive=True)
+        with handle.open(filename, 'wb') as fp_out:
+            fp_out.write(fp.read())
+#
+#        task_id = taskqueue.add(
+#            '{}/xmldirector-test'.format(plone.api.portal.get().absolute_url(1)),
+#            params=dict(a=2,b=3))
 
         return {'msg': 'done'}
