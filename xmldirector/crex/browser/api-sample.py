@@ -97,6 +97,8 @@ print '-'*80
 print 'GET_SINGLE'
 result = send_request('GET', 'xmldirector-get-single', url=url , qs='?name=src/word/index.docx')
 
+result = send_request('GET', 'xmldirector-get-single', url=url , qs='?name=src/word/index.docxxx')
+
 print '-'*80
 print 'GET_HASHES'
 result = send_request('GET', 'xmldirector-hashes', url=url , qs='?names:list=src/word/index.docx')

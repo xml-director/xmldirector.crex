@@ -21,6 +21,7 @@ import fs.zipfs
 from contextlib import contextmanager
 
 import plone.api
+import zExceptions
 from plone.rest import Service
 from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
@@ -462,7 +463,7 @@ class api_get_single(BaseService):
             return fs_filestream_iterator(fp)
         else:
             self.request.response.setStatus(403)
-            self.request.response.write(u'Not found: {}'.format(name))
+            raise zExceptions.NotFound(u'Not found: {}'.format(name))
 
 
 class api_convert(BaseService):
