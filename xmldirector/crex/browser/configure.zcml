@@ -112,4 +112,18 @@
         name="xmldirector-convert"
     />
 
+    <plone:service
+      method="GET"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_hashes"
+        name="xmldirector-hashes"
+    />
+
+    <plone:service
+      method="GET"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_test"
+        name="xmldirector-test"
+    />
+
 </configure>

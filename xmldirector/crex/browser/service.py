@@ -418,10 +418,6 @@ class api_convert(BaseService):
     @timed
     def render(self):
 
-
-        task_id = taskqueue.add(
-            '{}/xmldirector-test'.format(plone.api.portal.get().absolute_url(1)))
-
         check_permission(permissions.ModifyPortalContent, self.context)
         IPersistentLogger(self.context).log('convert')
 
@@ -455,6 +451,7 @@ class api_list(BaseService):
         handle = self.context.webdav_handle()
         return dict(files=list(handle.walkfiles()))
 
+
 class api_list_full(BaseService):
 
     @timed
@@ -467,5 +464,36 @@ class api_list_full(BaseService):
         for dirname in handle.walkdirs():
             for name, data in handle.ilistdirinfo(dirname, full=True):
                 data['modified_time'] = data['modified_time'].isoformat() # datetime not JSONifyable
+                if handle.isfile(name):
+                    with handle.open(name, 'rb') as fp:
+                        data['sha256'] = sha256_fp(fp)
                 result[name] = data
         return result
+
+
+class api_hashes(BaseService):
+
+    @timed
+    def render(self):
+
+        check_permission(permissions.View, self.context)
+        handle = self.context.webdav_handle()
+        result = dict()
+        for name in self.request.form.get('names', ()):
+            result[name] = dict()
+            if handle.exists(name) and handle.isfile(name):
+                with handle.open(name, 'rb') as fp:
+                    result[name]['sha256'] = sha256_fp(fp)
+        return result
+
+
+class api_test(BaseService):
+
+    @timed
+    def render(self):
+        
+        task_id = taskqueue.add(
+            '{}/xmldirector-test'.format(plone.api.portal.get().absolute_url(1)),
+            params=dict(a=2,b=3))
+
+        return {}
