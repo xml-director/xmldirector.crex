@@ -6,6 +6,7 @@
 ################################################################
 
 
+import os
 import json
 import requests
 
@@ -19,13 +20,17 @@ from xmldirector.crex.tests.base import TestBase
 
 class TestFilestreamIterator(TestBase):
 
-    def test_create(self):
+    def _make_one(self):
         response = requests.put(
             self.portal.absolute_url() + '/xmldirector-create',
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        payload = response.json()
+        return response
+
+    def test_create(self):
+        response = self._make_one()
         self.assertTrue(response.status_code == 201)
+        payload = response.json()
         self.assertTrue('id' in payload)
         id = payload['id']
         url = payload['url']
@@ -40,10 +45,7 @@ class TestFilestreamIterator(TestBase):
 
 
     def test_set_get_metadata(self):
-        response = requests.put(
-            self.portal.absolute_url() + '/xmldirector-create',
-            headers={'Accept': 'application/json'},
-            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        response = self._make_one()
         payload = response.json()
         url = payload['url']
 
@@ -67,3 +69,22 @@ class TestFilestreamIterator(TestBase):
         self.assertEqual(metadata['title'], data['title'])
         self.assertEqual(metadata['description'], data['description'])
         self.assertEqual(metadata['custom'], data['custom'])
+
+    
+    def test_single_store_get(self):
+
+        response = self._make_one()
+        self.assertTrue(response.status_code == 201)
+        url = response.json()['url']
+
+        cwd = os.path.dirname(__file__)
+        files = [('files', ('sample.docx', open(os.path.join(cwd, 'sample.docx'), 'rb'), 'application/zip')),
+                 ('files', ('sample.txt', open(os.path.join(cwd, 'sample.txt'), 'rb'), 'text/plain'))]
+
+        response = requests.post(
+            '{}/xmldirector-store-single'.format(url),
+            files=files,
+            headers={'Accept': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertTrue(response.status_code == 200)
+        
