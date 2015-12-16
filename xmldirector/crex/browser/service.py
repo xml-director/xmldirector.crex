@@ -58,9 +58,7 @@ def check_permission(permission, context):
 def decode_json_payload(request):
     """ Extract JSON data from the body of a Zope request """
 
-    body = getattr(request, 'BODY', None)
-    if not body:
-        raise ValueError(u'Request does not contain body data')
+    body = getattr(request, 'BODY', '') or '{}'
 
     try:
         return json.loads(body)
@@ -256,7 +254,7 @@ class api_create(BaseService):
             title=title,
             description=description)
 
-        connector.webdav_subpath = 'plone-api-{}/{}'.format(
+        connector.webdav_subpath = 'plone.api-{}/{}'.format(
             plone.api.portal.get().getId(), id)
         connector.webdav_handle(create_if_not_existing=True)
 
@@ -407,12 +405,10 @@ class api_get(BaseService):
 
         check_permission(permissions.ModifyPortalContent, self.context)
         json_data = decode_json_payload(self.request)
-
         if 'files' not in json_data:
             raise ValueError(u'JSON structure has no \'files\' field')
 
         files = json_data['files']
-
         handle = self.context.webdav_handle()
         zip_out = temp_zip(suffix='.zip')
         with fs.zipfs.ZipFS(zip_out, 'w') as zip_handle:
@@ -426,7 +422,6 @@ class api_get(BaseService):
                                 fp_out.write(fp_in.read())
                         break
 
-#        with close_and_delete(open(zip_out, 'rb')) as fp:
         with delete_after(zip_out):
             self.request.response.setHeader(
                 'content-length', str(os.path.getsize(zip_out)))
@@ -442,9 +437,11 @@ class api_get_single(BaseService):
     def render(self):
 
         check_permission(permissions.View, self.context)
-        name = self.request.form['name']
-        mt, encoding = mimetypes.guess_type(os.path.basename(name))
+        name = self.request.form.get('name')
+        if not name:
+            raise ValueError('Parameter "name" is missing')
 
+        mt, encoding = mimetypes.guess_type(os.path.basename(name))
         handle = self.context.webdav_handle()
         if handle.exists(name):
             fp = handle.open(name, 'rb')
@@ -528,9 +525,11 @@ class api_hashes(BaseService):
         result = dict()
         for name in self.request.form.get('names', ()):
             result[name] = dict()
-            if handle.exists(name) and handle.isfile(name):
+            try:
                 with handle.open(name, 'rb') as fp:
                     result[name]['sha256'] = sha256_fp(fp)
+            except fs.errors.ResourceError:
+                pass
         return result
 
 
@@ -540,21 +539,34 @@ class api_store_single(BaseService):
     def render(self):
 
         fp = self.request.form.get('file')
-        filename  = self.request.form.get('filename')
         if not fp:
             raise ValueError('No file uploaded')
+        filename  = self.request.form.get('filename')
         if not filename:
             raise ValueError('Filename missing')
 
         handle = self.context.webdav_handle()
-        dirname = os.path.dirname(filename)
         handle.ensuredir(filename)
-        
         with handle.open(filename, 'wb') as fp_out:
             fp_out.write(fp.read())
-#
-#        task_id = taskqueue.add(
-#            '{}/xmldirector-test'.format(plone.api.portal.get().absolute_url(1)),
-#            params=dict(a=2,b=3))
+        return {}
 
-        return {'msg': 'done'}
+
+class api_delete_folder(BaseService):
+
+    @timed
+    def render(self):
+
+        name = self.request.form.get('name')
+        if not name:
+            raise ValueError('Parameter "name" missing')
+
+        handle = self.context.webdav_handle()
+        if handle.exists(name):
+            if handle.isfile(name):
+                handle.remove(name)
+            elif handle.isdir(name):
+                handle.removedir(name, force=True)
+            return {}
+        else:
+            raise zExceptions.NotFound('File/director "{}" not found'.format(name))
