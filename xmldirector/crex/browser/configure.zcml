@@ -127,6 +127,19 @@
     />
 
     <plone:service
+      method="GET"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_delete_folder"
+        name="xmldirector-delete-folder"
+    />
+    <plone:service
+      method="DELETE"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_delete_folder"
+        name="xmldirector-delete-folder"
+    />
+
+    <plone:service
       method="POST"
         for="xmldirector.plonecore.connector.IConnector"
         factory=".service.api_store_single"
