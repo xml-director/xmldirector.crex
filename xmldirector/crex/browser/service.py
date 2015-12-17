@@ -257,6 +257,7 @@ class api_create(BaseService):
         connector.webdav_subpath = 'plone.api-{}/{}'.format(
             plone.api.portal.get().getId(), id)
         connector.webdav_handle(create_if_not_existing=True)
+        connector.reindexObject()
 
         if custom:
             annotations = IAnnotations(connector)
@@ -363,16 +364,19 @@ class api_delete(BaseService):
         return dict()
 
 
-class api_store(BaseService):
+class api_store_zip(BaseService):
 
     @timed
     def render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
         IPersistentLogger(self.context).log('store')
-        payload = decode_json_payload(self.request)
-        webdav_handle = self.context.webdav_handle()
 
+        if not 'zipfile' in self.request.form:
+            raise ValueError('No parameter "zipfile" found')
+
+        # cleanup source folder
+        webdav_handle = self.context.webdav_handle(create_if_not_existing=True)
         target_dir = 'src'
         if webdav_handle.exists(target_dir):
             webdav_handle.removedir(target_dir, force=True)
@@ -381,7 +385,7 @@ class api_store(BaseService):
         # Write payload/data to ZIP file
         zip_out = temp_zip(suffix='.zip')
         with open(zip_out, 'wb') as fp:
-            fp.write(payload['zip'].decode('base64'))
+            fp.write(self.request.form['zipfile'].read())
 
         # and unpack it
         with delete_after(zip_out):
@@ -431,18 +435,18 @@ class api_get(BaseService):
             return filestream_iterator(zip_out)
 
 
-class api_get_single(BaseService):
+class api_get(BaseService):
 
     @timed
     def render(self):
-
+        
         check_permission(permissions.View, self.context)
         name = self.request.form.get('name')
         if not name:
             raise ValueError('Parameter "name" is missing')
 
         mt, encoding = mimetypes.guess_type(os.path.basename(name))
-        handle = self.context.webdav_handle()
+        handle = self.context.webdav_handle(create_if_not_existing=True)
         if handle.exists(name):
             fp = handle.open(name, 'rb')
             size = handle.getsize(name)
@@ -489,10 +493,10 @@ class api_list(BaseService):
 
     @timed
     def render(self):
-
+             
         check_permission(permissions.View, self.context)
 
-        handle = self.context.webdav_handle()
+        handle = self.context.webdav_handle(create_if_not_existing=True)
         return dict(files=list(handle.walkfiles()))
 
 
@@ -533,22 +537,19 @@ class api_hashes(BaseService):
         return result
 
 
-class api_store_single(BaseService):
+class api_store(BaseService):
 
     @timed
     def render(self):
 
-        fp = self.request.form.get('file')
-        if not fp:
-            raise ValueError('No file uploaded')
-        filename  = self.request.form.get('filename')
-        if not filename:
-            raise ValueError('Filename missing')
-
-        handle = self.context.webdav_handle()
-        handle.ensuredir(filename)
-        with handle.open(filename, 'wb') as fp_out:
-            fp_out.write(fp.read())
+        handle = self.context.webdav_handle(create_if_not_existing=True)
+        for file_item in self.request.form.get('files', ()):
+            filename = file_item.filename
+            handle.ensuredir(filename)
+            with handle.open(filename, 'wb') as fp_out:
+                fp_out.write(file_item.read())
+            with handle.open(filename + '.sha256', 'wb') as fp_out:
+                fp_out.write(sha256_fp(file_item))
         return {}
 
 

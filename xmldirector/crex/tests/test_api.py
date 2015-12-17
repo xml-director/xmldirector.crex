@@ -18,7 +18,10 @@ from plone.app.testing import SITE_OWNER_PASSWORD
 from xmldirector.crex.tests.base import TestBase
 
 
-class TestFilestreamIterator(TestBase):
+cwd = os.path.dirname(__file__)
+
+
+class TestCRexAPI(TestBase):
 
     def _make_one(self):
         response = requests.put(
@@ -30,7 +33,7 @@ class TestFilestreamIterator(TestBase):
 
     def test_create(self):
         response = self._make_one()
-        self.assertTrue(response.status_code == 201)
+        self.assertEqual(response.status_code, 201)
         payload = response.json()
         self.assertTrue('id' in payload)
         id = payload['id']
@@ -40,7 +43,7 @@ class TestFilestreamIterator(TestBase):
             '{}/xmldirector-get-metadata?id={}'.format(url, id),
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload['id'], id)
 
@@ -59,13 +62,13 @@ class TestFilestreamIterator(TestBase):
             data=json.dumps(data),
             headers={'Accept': 'application/json', 'content-type': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
 
         response = requests.get(
             '{}/xmldirector-get-metadata'.format(url),
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
         metadata = response.json()
         self.assertEqual(metadata['title'], data['title'])
         self.assertEqual(metadata['description'], data['description'])
@@ -75,35 +78,59 @@ class TestFilestreamIterator(TestBase):
     def test_store_get(self):
 
         response = self._make_one()
-        self.assertTrue(response.status_code == 201)
+        self.assertEqual(response.status_code, 201)
         url = response.json()['url']
 
-        cwd = os.path.dirname(__file__)
         files = [('files', ('src/dummy/sample.docx', open(os.path.join(cwd, 'sample.docx'), 'rb'), 'application/zip')),
                  ('files', ('src/dummy/sample.txt', open(os.path.join(cwd, 'sample.txt'), 'rb'), 'text/plain'))]
 
         response = requests.post(
-            '{}/xmldirector-store-single'.format(url),
+            '{}/xmldirector-store'.format(url),
             files=files,
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
 
         response = requests.get(
-            '{}/xmldirector-get-single'.format(url),
+            '{}/xmldirector-get'.format(url),
             params=dict(name='DOES.NOT.EXIST'),
             headers={'Accept': 'application/json', 'content-type': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        self.assertTrue(response.status_code == 404)
+        self.assertEqual(response.status_code, 404)
 
         response = requests.get(
-            '{}/xmldirector-get-single'.format(url),
+            '{}/xmldirector-get'.format(url),
             params=dict(name='src/dummy/sample.docx'),
             headers={'Accept': 'application/json', 'content-type': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        self.assertTrue(response.status_code == 200)
+        self.assertEqual(response.status_code, 200)
 
         data = response.content
         with open(os.path.join(cwd, 'sample.docx'), 'rb') as fp:
             docx_data = fp.read()
-        self.assertTrue(data==docx_data)
+        self.assertEqual(data, docx_data)
+    
+    def test_store_zip(self):
+
+        response = self._make_one()
+        self.assertEqual(response.status_code, 201)
+        url = response.json()['url']
+        
+        files = [('zipfile', ('sample.zip', open(os.path.join(cwd, 'sample.zip'), 'rb'), 'application/zip'))]
+        response = requests.post(
+            '{}/xmldirector-store-zip'.format(url),
+            files=files,
+            headers={'Accept': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+
+        response = requests.get(
+            '{}/xmldirector-list'.format(url),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        files = payload['files']
+        self.assertTrue('/src/folder/1.txt' in files, files)
+        self.assertTrue('/src/folder/2.txt' in files, files)
+        self.assertTrue('/src/folder/3.txt' in files, files)

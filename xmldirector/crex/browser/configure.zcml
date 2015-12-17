@@ -80,8 +80,8 @@
     <plone:service
       method="POST"
         for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_store"
-        name="xmldirector-store"
+        factory=".service.api_store_zip"
+        name="xmldirector-store-zip"
     />
 
     <plone:service
@@ -94,8 +94,8 @@
     <plone:service
       method="GET"
         for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_get_single"
-        name="xmldirector-get-single"
+        factory=".service.api_get"
+        name="xmldirector-get"
     />
 
     <plone:service
@@ -142,8 +142,8 @@
     <plone:service
       method="POST"
         for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_store_single"
-        name="xmldirector-store-single"
+        factory=".service.api_store"
+        name="xmldirector-store"
     />
 
 </configure>
