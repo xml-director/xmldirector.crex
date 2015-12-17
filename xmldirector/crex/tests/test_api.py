@@ -25,6 +25,7 @@ class TestFilestreamIterator(TestBase):
             self.portal.absolute_url() + '/xmldirector-create',
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.portal._p_jar.sync()
         return response
 
     def test_create(self):
@@ -71,15 +72,15 @@ class TestFilestreamIterator(TestBase):
         self.assertEqual(metadata['custom'], data['custom'])
 
     
-    def test_single_store_get(self):
+    def test_store_get(self):
 
         response = self._make_one()
         self.assertTrue(response.status_code == 201)
         url = response.json()['url']
 
         cwd = os.path.dirname(__file__)
-        files = [('files', ('sample.docx', open(os.path.join(cwd, 'sample.docx'), 'rb'), 'application/zip')),
-                 ('files', ('sample.txt', open(os.path.join(cwd, 'sample.txt'), 'rb'), 'text/plain'))]
+        files = [('files', ('src/dummy/sample.docx', open(os.path.join(cwd, 'sample.docx'), 'rb'), 'application/zip')),
+                 ('files', ('src/dummy/sample.txt', open(os.path.join(cwd, 'sample.txt'), 'rb'), 'text/plain'))]
 
         response = requests.post(
             '{}/xmldirector-store-single'.format(url),
@@ -87,4 +88,22 @@ class TestFilestreamIterator(TestBase):
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
         self.assertTrue(response.status_code == 200)
-        
+
+        response = requests.get(
+            '{}/xmldirector-get-single'.format(url),
+            params=dict(name='DOES.NOT.EXIST'),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertTrue(response.status_code == 404)
+
+        response = requests.get(
+            '{}/xmldirector-get-single'.format(url),
+            params=dict(name='src/dummy/sample.docx'),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertTrue(response.status_code == 200)
+
+        data = response.content
+        with open(os.path.join(cwd, 'sample.docx'), 'rb') as fp:
+            docx_data = fp.read()
+        self.assertTrue(data==docx_data)
