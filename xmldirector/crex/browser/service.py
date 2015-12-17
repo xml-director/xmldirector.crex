@@ -233,10 +233,20 @@ class BaseService(Service):
         return plone.api.portal.get_tool('portal_catalog')
 
 
-class api_create(BaseService):
-
     @timed
     def render(self):
+
+        try:
+            return self._render()
+        except Exception as e:
+            LOG.error(self.request.text())
+            LOG.error(e, exc_info=True)
+            raise e
+
+
+class api_create(BaseService):
+
+    def _render(self):
         """ Create a new content object in Plone """
 
         check_permission(permissions.ModifyPortalContent, self.context)
@@ -273,8 +283,7 @@ class api_create(BaseService):
 
 class api_search(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.View, self.context)
 
@@ -298,8 +307,7 @@ class api_search(BaseService):
 
 class api_get_metadata(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.View, self.context)
 
@@ -319,8 +327,7 @@ class api_get_metadata(BaseService):
 
 class api_set_metadata(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
 
@@ -349,8 +356,7 @@ class api_set_metadata(BaseService):
 
 class api_delete(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.DeleteObjects, self.context)
 
@@ -366,8 +372,7 @@ class api_delete(BaseService):
 
 class api_store_zip(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
         IPersistentLogger(self.context).log('store')
@@ -404,8 +409,7 @@ class api_store_zip(BaseService):
 
 class api_get_zip(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
 
@@ -429,8 +433,7 @@ class api_get_zip(BaseService):
 
 class api_get(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
         
         check_permission(permissions.View, self.context)
         name = self.request.form.get('name')
@@ -455,8 +458,7 @@ class api_get(BaseService):
 
 class api_convert(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
         IPersistentLogger(self.context).log('convert')
@@ -483,8 +485,7 @@ class api_convert(BaseService):
 
 class api_list(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
              
         check_permission(permissions.View, self.context)
 
@@ -496,8 +497,7 @@ class api_list(BaseService):
 
 class api_list_full(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.View, self.context)
 
@@ -515,8 +515,7 @@ class api_list_full(BaseService):
 
 class api_hashes(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.View, self.context)
         handle = self.context.webdav_handle(create_if_not_existing=True)
@@ -539,8 +538,7 @@ class api_hashes(BaseService):
 
 class api_store(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         handle = self.context.webdav_handle(create_if_not_existing=True)
         for file_item in self.request.form.get('files', ()):
@@ -555,8 +553,7 @@ class api_store(BaseService):
 
 class api_delete_content(BaseService):
 
-    @timed
-    def render(self):
+    def _render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
         handle = self.context.webdav_handle(create_if_not_existing=True)
