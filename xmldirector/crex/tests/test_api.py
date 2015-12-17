@@ -45,6 +45,16 @@ class TestCRexAPI(TestBase):
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
         self.assertEqual(response.status_code, 200)
 
+    def test_search(self):
+        response = self._make_one()
+        self.assertEqual(response.status_code, 201)
+
+        response = requests.get(self.portal.absolute_url() + '/xmldirector-search',
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+
     def test_create(self):
         response = self._make_one()
         self.assertEqual(response.status_code, 201)
@@ -159,9 +169,9 @@ class TestCRexAPI(TestBase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         files = payload['files']
-        self.assertTrue('/src/folder/1.txt' in files, files)
-        self.assertTrue('/src/folder/2.txt' in files, files)
-        self.assertTrue('/src/folder/3.txt' in files, files)
+        self.assertTrue('src/folder/1.txt' in files, files)
+        self.assertTrue('src/folder/2.txt' in files, files)
+        self.assertTrue('src/folder/3.txt' in files, files)
 
         response = requests.get(
             '{}/xmldirector-list-full'.format(url),
@@ -169,6 +179,30 @@ class TestCRexAPI(TestBase):
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertTrue('/src/folder/1.txt' in payload, files)
-        self.assertTrue('/src/folder/2.txt' in payload, files)
-        self.assertTrue('/src/folder/3.txt' in payload, files)
+        self.assertTrue('src/folder/1.txt' in payload, files)
+        self.assertTrue('src/folder/2.txt' in payload, files)
+        self.assertTrue('src/folder/3.txt' in payload, files)
+
+    def test_hashes(self):
+        response = self._make_one()
+        self.assertEqual(response.status_code, 201)
+        url = response.json()['url']
+        
+        files = [('zipfile', ('sample.zip', open(os.path.join(cwd, 'sample.zip'), 'rb'), 'application/zip'))]
+        response = requests.post(
+            '{}/xmldirector-store-zip'.format(url),
+            files=files,
+            headers={'Accept': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        
+        response = requests.get(
+            '{}/xmldirector-hashes'.format(url),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload['src/folder/1.txt']['sha256'], 'a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447')
+        self.assertEqual(payload['src/folder/2.txt']['sha256'], '6355baea1348fe93f7d9c0c56a5cfeff34682aeb6f24a61ce7b06fdb94927a8d')
+        self.assertEqual(payload['src/folder/3.txt']['sha256'], 'a8e82d2a65f75a68e82ea8835522dd67f1fede950bfedef9ccd1b2608dd70cb5')
+

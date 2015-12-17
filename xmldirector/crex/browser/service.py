@@ -489,7 +489,9 @@ class api_list(BaseService):
         check_permission(permissions.View, self.context)
 
         handle = self.context.webdav_handle(create_if_not_existing=True)
-        return dict(files=list(handle.walkfiles()))
+        files = list(handle.walkfiles())
+        files = [fn.lstrip('/') for fn in files]
+        return dict(files=files)
 
 
 class api_list_full(BaseService):
@@ -507,7 +509,7 @@ class api_list_full(BaseService):
                 if handle.isfile(name):
                     with handle.open(name, 'rb') as fp:
                         data['sha256'] = sha256_fp(fp)
-                result['/' + name] = data
+                result[name] = data
         return result
 
 
@@ -517,15 +519,21 @@ class api_hashes(BaseService):
     def render(self):
 
         check_permission(permissions.View, self.context)
-        handle = self.context.webdav_handle()
+        handle = self.context.webdav_handle(create_if_not_existing=True)
         result = dict()
-        for name in self.request.form.get('names', ()):
-            result[name] = dict()
+        for name in handle.walkfiles(): 
+            if name.endswith('.sha256'):
+                continue
+            result[name.lstrip('/')] = dict()
             try:
-                with handle.open(name, 'rb') as fp:
-                    result[name]['sha256'] = sha256_fp(fp)
+                with handle.open(name + '.sha256', 'rb') as fp:
+                    result[name.lstrip('/')]['sha256'] = fp.read()
             except fs.errors.ResourceError:
-                pass
+                try:
+                    with handle.open(name, 'rb') as fp:
+                        result[name.lstrip('/')]['sha256'] = sha256_fp(fp)
+                except fs.errors.ResourceError:
+                    pass
         return result
 
 
@@ -545,21 +553,27 @@ class api_store(BaseService):
         return {}
 
 
-class api_delete_folder(BaseService):
+class api_delete_content(BaseService):
 
     @timed
     def render(self):
 
-        name = self.request.form.get('name')
-        if not name:
-            raise ValueError('Parameter "name" missing')
+        check_permission(permissions.ModifyPortalContent, self.context)
+        handle = self.context.webdav_handle(create_if_not_existing=True)
+        payload = decode_json_payload(self.request)
 
-        handle = self.context.webdav_handle()
-        if handle.exists(name):
-            if handle.isfile(name):
-                handle.remove(name)
-            elif handle.isdir(name):
-                handle.removedir(name, force=True)
-            return {}
-        else:
-            raise zExceptions.NotFound('File/director "{}" not found'.format(name))
+        if 'files' not in payload:
+            raise ValueError('No data for "files" found in JSON data')
+
+        files = payload['files']
+        result = list()
+        for name in files:
+            if handle.exists(name):
+                if handle.isfile(name):
+                    handle.remove(name)
+                elif handle.isdir(name):
+                    handle.removedir(name, force=True)
+                result[name] = u'removed'
+            else:
+                result[name] = u'not found'
+        return result

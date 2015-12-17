@@ -114,13 +114,11 @@
         name="xmldirector-delete"
     />
 
-    <!-- UNTESTED -->
-
     <plone:service
       method="GET"
-        for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_convert"
-        name="xmldirector-convert"
+        for="*"
+        factory=".service.api_search"
+        name="xmldirector-search"
     />
 
     <plone:service
@@ -131,24 +129,19 @@
     />
 
     <plone:service
-      method="GET"
+      method="POST"
         for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_delete_folder"
-        name="xmldirector-delete-folder"
-    />
-    <plone:service
-      method="DELETE"
-        for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_delete_folder"
-        name="xmldirector-delete-folder"
+        factory=".service.api_delete_content"
+        name="xmldirector-delete-content"
     />
 
+    <!-- UNTESTED -->
 
     <plone:service
       method="GET"
-        for="*"
-        factory=".service.api_search"
-        name="xmldirector-search"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_convert"
+        name="xmldirector-convert"
     />
 
 </configure>
