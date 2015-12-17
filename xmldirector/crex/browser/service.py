@@ -402,29 +402,21 @@ class api_store_zip(BaseService):
         return dict(msg=u'Saved')
 
 
-class api_get(BaseService):
+class api_get_zip(BaseService):
 
     @timed
     def render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
-        json_data = decode_json_payload(self.request)
-        if 'files' not in json_data:
-            raise ValueError(u'JSON structure has no \'files\' field')
 
-        files = json_data['files']
-        handle = self.context.webdav_handle()
+        handle = self.context.webdav_handle(create_if_not_existing=True)
         zip_out = temp_zip(suffix='.zip')
         with fs.zipfs.ZipFS(zip_out, 'w') as zip_handle:
             for name in handle.walkfiles():
-                if name.startswith('/'):
-                    name = name[1:]
-                for fname in files:
-                    if fnmatch.fnmatch(name, fname):
-                        with handle.open(name, 'rb') as fp_in:
-                            with zip_handle.open(name, 'wb') as fp_out:
-                                fp_out.write(fp_in.read())
-                        break
+                with handle.open(name, 'rb') as fp_in:
+                    # zipfs seems to strip off the leading /
+                    with zip_handle.open(name, 'wb') as fp_out:
+                        fp_out.write(fp_in.read())
 
         with delete_after(zip_out):
             self.request.response.setHeader(

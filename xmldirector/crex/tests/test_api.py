@@ -8,6 +8,8 @@
 
 import os
 import json
+import zipfile
+import tempfile
 import requests
 
 from plone.app.testing import setRoles
@@ -30,6 +32,18 @@ class TestCRexAPI(TestBase):
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
         self.portal._p_jar.sync()
         return response
+
+    def test_delete(self):
+        response = self._make_one()
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        url = payload['url']
+
+        response = requests.delete(
+            '{}/xmldirector-delete'.format(url),
+            headers={'Accept': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
 
     def test_create(self):
         response = self._make_one()
@@ -110,7 +124,7 @@ class TestCRexAPI(TestBase):
             docx_data = fp.read()
         self.assertEqual(data, docx_data)
     
-    def test_store_zip(self):
+    def test_store_get_zip(self):
 
         response = self._make_one()
         self.assertEqual(response.status_code, 201)
@@ -125,6 +139,20 @@ class TestCRexAPI(TestBase):
         self.assertEqual(response.status_code, 200)
 
         response = requests.get(
+            '{}/xmldirector-get-zip'.format(url),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        zip_tmp = tempfile.mktemp(suffix='.zip')
+        with open(zip_tmp, 'wb') as fp:
+            fp.write(response.content)
+        with zipfile.ZipFile(zip_tmp, 'r') as zf:
+            zf_files = zf.namelist()
+            self.assertTrue('src/folder/1.txt' in zf_files, zf_files)
+            self.assertTrue('src/folder/2.txt' in zf_files, zf_files)
+            self.assertTrue('src/folder/3.txt' in zf_files, zf_files)
+
+        response = requests.get(
             '{}/xmldirector-list'.format(url),
             headers={'Accept': 'application/json', 'content-type': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
@@ -134,7 +162,6 @@ class TestCRexAPI(TestBase):
         self.assertTrue('/src/folder/1.txt' in files, files)
         self.assertTrue('/src/folder/2.txt' in files, files)
         self.assertTrue('/src/folder/3.txt' in files, files)
-
 
         response = requests.get(
             '{}/xmldirector-list-full'.format(url),

@@ -66,13 +66,6 @@
     />
 
     <plone:service
-      method="POST"
-        for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_store"
-        name="xmldirector-store"
-    />
-
-    <plone:service
       method="GET"
         for="xmldirector.plonecore.connector.IConnector"
         factory=".service.api_get"
@@ -80,10 +73,24 @@
     />
 
     <plone:service
+      method="GET"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_get_zip"
+        name="xmldirector-get-zip"
+    />
+
+    <plone:service
       method="POST"
         for="xmldirector.plonecore.connector.IConnector"
         factory=".service.api_store_zip"
         name="xmldirector-store-zip"
+    />
+
+    <plone:service
+      method="POST"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_store"
+        name="xmldirector-store"
     />
 
     <plone:service
@@ -100,9 +107,6 @@
         name="xmldirector-list-full"
     />
 
-
-    <!-- UNTESTED -->
-
     <plone:service
       method="DELETE"
         for="xmldirector.plonecore.connector.IConnector"
@@ -110,13 +114,7 @@
         name="xmldirector-delete"
     />
 
-    <plone:service
-      method="POST"
-        for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_get"
-        name="xmldirector-get"
-    />
-
+    <!-- UNTESTED -->
 
     <plone:service
       method="GET"
