@@ -206,3 +206,27 @@ class TestCRexAPI(TestBase):
         self.assertEqual(payload['src/folder/2.txt']['sha256'], '6355baea1348fe93f7d9c0c56a5cfeff34682aeb6f24a61ce7b06fdb94927a8d')
         self.assertEqual(payload['src/folder/3.txt']['sha256'], 'a8e82d2a65f75a68e82ea8835522dd67f1fede950bfedef9ccd1b2608dd70cb5')
 
+    def test_delete_content(self):
+        response = self._make_one()
+        self.assertEqual(response.status_code, 201)
+        url = response.json()['url']
+        
+        files = [('zipfile', ('sample.zip', open(os.path.join(cwd, 'sample.zip'), 'rb'), 'application/zip'))]
+        response = requests.post(
+            '{}/xmldirector-store-zip'.format(url),
+            files=files,
+            headers={'Accept': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        
+        to_delete = ['src/folder/1.txt', 'src/folder/2.txt', 'xxx']
+        response = requests.post(
+            '{}/xmldirector-delete-content'.format(url),
+            data=json.dumps(dict(files=to_delete)),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload['src/folder/1.txt'], u'removed')
+        self.assertEqual(payload['src/folder/2.txt'], u'removed')
+        self.assertEqual(payload['xxx'], u'not found')

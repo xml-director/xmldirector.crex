@@ -566,7 +566,7 @@ class api_delete_content(BaseService):
             raise ValueError('No data for "files" found in JSON data')
 
         files = payload['files']
-        result = list()
+        result = dict()
         for name in files:
             if handle.exists(name):
                 if handle.isfile(name):
