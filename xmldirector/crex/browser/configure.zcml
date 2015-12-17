@@ -42,18 +42,13 @@
 
     <include package="plone.rest" file="configure.zcml" />
 
+    <!-- TESTED -->
+
     <plone:service
       method="PUT"
         for="*"
         factory=".service.api_create"
         name="xmldirector-create"
-    />
-
-    <plone:service
-      method="GET"
-        for="*"
-        factory=".service.api_search"
-        name="xmldirector-search"
     />
 
     <plone:service
@@ -71,24 +66,10 @@
     />
 
     <plone:service
-      method="DELETE"
-        for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_delete"
-        name="xmldirector-delete"
-    />
-
-    <plone:service
       method="POST"
         for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_store_zip"
-        name="xmldirector-store-zip"
-    />
-
-    <plone:service
-      method="POST"
-        for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_get"
-        name="xmldirector-get"
+        factory=".service.api_store"
+        name="xmldirector-store"
     />
 
     <plone:service
@@ -96,6 +77,13 @@
         for="xmldirector.plonecore.connector.IConnector"
         factory=".service.api_get"
         name="xmldirector-get"
+    />
+
+    <plone:service
+      method="POST"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_store_zip"
+        name="xmldirector-store-zip"
     />
 
     <plone:service
@@ -111,6 +99,24 @@
         factory=".service.api_list_full"
         name="xmldirector-list-full"
     />
+
+
+    <!-- UNTESTED -->
+
+    <plone:service
+      method="DELETE"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_delete"
+        name="xmldirector-delete"
+    />
+
+    <plone:service
+      method="POST"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_get"
+        name="xmldirector-get"
+    />
+
 
     <plone:service
       method="GET"
@@ -139,11 +145,12 @@
         name="xmldirector-delete-folder"
     />
 
+
     <plone:service
-      method="POST"
-        for="xmldirector.plonecore.connector.IConnector"
-        factory=".service.api_store"
-        name="xmldirector-store"
+      method="GET"
+        for="*"
+        factory=".service.api_search"
+        name="xmldirector-search"
     />
 
 </configure>

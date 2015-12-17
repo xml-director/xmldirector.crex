@@ -507,7 +507,7 @@ class api_list_full(BaseService):
 
         check_permission(permissions.View, self.context)
 
-        handle = self.context.webdav_handle()
+        handle = self.context.webdav_handle(create_if_not_existing=True)
         result = dict()
         for dirname in handle.walkdirs():
             for name, data in handle.ilistdirinfo(dirname, full=True):
@@ -515,7 +515,7 @@ class api_list_full(BaseService):
                 if handle.isfile(name):
                     with handle.open(name, 'rb') as fp:
                         data['sha256'] = sha256_fp(fp)
-                result[name] = data
+                result['/' + name] = data
         return result
 
 

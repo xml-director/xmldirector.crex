@@ -134,3 +134,14 @@ class TestCRexAPI(TestBase):
         self.assertTrue('/src/folder/1.txt' in files, files)
         self.assertTrue('/src/folder/2.txt' in files, files)
         self.assertTrue('/src/folder/3.txt' in files, files)
+
+
+        response = requests.get(
+            '{}/xmldirector-list-full'.format(url),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue('/src/folder/1.txt' in payload, files)
+        self.assertTrue('/src/folder/2.txt' in payload, files)
+        self.assertTrue('/src/folder/3.txt' in payload, files)
