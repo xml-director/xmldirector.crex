@@ -107,3 +107,126 @@ REST API documentation
    :statuscode 200: Connector deleted
    :statuscode 403: unauthorized
    :statuscode 404: not found
+
+
+.. http:POST:: /path-to-connector/xmldirector-set-metadata
+
+   Set metadata for a ``Connector`` object. You can set the ``title``,
+   ``description`` (both text) and the ``subject`` (list of strings)
+   as metadata for every ``Connector`` object. In addition the ``custom``
+   field can be used to specify arbitrary metadata that is not part
+   of the official Plone metadata.
+
+   **Example request**:
+
+
+
+   .. sourcecode:: http
+
+      POST /plone/some/path/xmldirector-set-metadata HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+      {
+          "custom": {
+              "a": 2, 
+              "b": 42
+          }, 
+          "description": "my description", 
+          "title": "hello world"
+      }
+
+
+
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: application/json
+
+      {
+      }
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Setting of metadata successful
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
+
+
+.. http:GET:: /path-to-connector/xmldirector-get-metadata
+
+   Return Plone and custom metadata (see ``xmldirector-set-metadata`` for details.
+
+   **Example request**:
+
+   .. sourcecode:: http
+
+      GET /plone/some/path/xmldirector-get-metadata HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: application/json
+
+      {
+          "custom": {
+              "a": 2, 
+              "b": 42
+          }, 
+          "description": "my description", 
+          "title": "hello world"
+      }
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Get operation successful
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
+
+.. http:GET:: /path-to-connector/xmldirector-get
+    
+   Retrieve a single file by path
+
+.. http:GET:: /path-to-connector/xmldirector-get-zip
+    
+   Retrieve all files as ZIP file
+
+.. http:POST/path-to-connector/xmldirector-store
+    
+   Upload one or more files as multipart form-data request.
+
+.. http:POST/path-to-connector/xmldirector-store-zip
+    
+   Upload one or more files as ZIP archive. The ZIP archive
+   will be unpacked.
+
+
+.. http:GET:: /path-to-connector/xmldirector-list
+   
+   Retrieve a list of all stored files 
+   
+.. http:GET:: /path-to-connector/xmldirector-list-full
+   
+   Retrieve a list of all stored files including information about size, file mode
+   and their SHA256 hash.
+   
+.. http:GET:: /path-to-connector/xmldirector-hashes
+   
+   Return all SHA256 hashes of all stored files.
+   and their SHA256 hash.
+   
