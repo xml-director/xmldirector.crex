@@ -43,7 +43,7 @@ from collective.taskqueue import taskqueue
 
 
 ANNOTATION_KEY = 'xmldirector.plonecore.crex'
-
+SRC_PREFIX = 'src'
 
 class CRexConversionError(Exception):
     """ A generic C-Rex error """
@@ -388,7 +388,7 @@ class api_store_zip(BaseService):
 
         # cleanup source folder
         webdav_handle = self.context.webdav_handle(create_if_not_existing=True)
-        target_dir = 'src'
+        target_dir = SRC_PREFIX
         if webdav_handle.exists(target_dir):
             webdav_handle.removedir(target_dir, force=True)
         webdav_handle.makedir(target_dir)
