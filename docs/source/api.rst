@@ -229,4 +229,12 @@ REST API documentation
    
    Return all SHA256 hashes of all stored files.
    and their SHA256 hash.
+
+.. http:POST:: /path-to-connector/xmldirector-delete-content
+   
+   Delete one or more items from the storage.
+
+.. http:POST:: /path-to-connector/xmldirector-convert
+   
+   Start CRex conversion.
    
