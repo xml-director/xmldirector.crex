@@ -74,6 +74,7 @@ class TestCRexAPI(TestBase):
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
         self.assertEqual(response.status_code, 200)
         payload = response.json()
+        self.assertTrue(len(payload) >= 1) 
 
     def test_create(self):
         response = self._make_one()
