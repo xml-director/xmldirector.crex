@@ -3,10 +3,11 @@ xmldirector.crex
 
 Integration of XML-Director with C-Rex.
 
-www.xml-director.info
-www.c-rex.net
+- www.xml-director.info
+- www.c-rex.net
 
 
-Documentation:
+Documentation
+-------------
 
-https://pythonhosted.org/xmldirector.crex/
+- https://pythonhosted.org/xmldirector.crex/

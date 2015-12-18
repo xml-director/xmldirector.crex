@@ -206,11 +206,11 @@ REST API documentation
     
    Retrieve all files as ZIP file
 
-.. http:POST/path-to-connector/xmldirector-store
+.. http:POST:: /path-to-connector/xmldirector-store
     
    Upload one or more files as multipart form-data request.
 
-.. http:POST/path-to-connector/xmldirector-store-zip
+.. http:POST:: /path-to-connector/xmldirector-store-zip
     
    Upload one or more files as ZIP archive. The ZIP archive
    will be unpacked.
