@@ -36,7 +36,9 @@ from ZPublisher.Iterators import IStreamIterator
 from xmldirector.crex.logger import LOG
 from xmldirector.crex.interfaces import ICRexSettings
 from xmldirector.plonecore.interfaces import IWebdavHandle
+from xmldirector.plonecore.connector import IConnector
 from zopyx.plone.persistentlogger.logger import IPersistentLogger
+
 from collective.taskqueue import taskqueue
 
 
@@ -236,6 +238,9 @@ class BaseService(Service):
     @timed
     def render(self):
 
+        if IConnector.providedBy(self.context) and not self.context.api_enabled:
+            raise ValueError('API access disabled for {}'.format(self.context.absolute_url))
+
         try:
             return self._render()
         except Exception as e:
@@ -266,6 +271,7 @@ class api_create(BaseService):
 
         connector.webdav_subpath = 'plone.api-{}/{}'.format(
             plone.api.portal.get().getId(), id)
+        connector.api_enabled = True
         connector.webdav_handle(create_if_not_existing=True)
         connector.reindexObject()
 

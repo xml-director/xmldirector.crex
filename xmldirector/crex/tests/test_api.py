@@ -12,6 +12,7 @@ import zipfile
 import tempfile
 import requests
 
+import transaction
 from plone.app.testing import setRoles
 from plone.app.testing import TEST_USER_ID
 from plone.app.testing import SITE_OWNER_NAME
@@ -44,6 +45,25 @@ class TestCRexAPI(TestBase):
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
         self.assertEqual(response.status_code, 200)
+
+    def test_disabled_api_access(self):
+        response = self._make_one()
+        payload = response.json()
+        id = payload['id']
+        url = payload['url']
+
+        connector = self.portal[id]
+        connector.api_enabled = False
+        transaction.commit()
+
+        data = dict(title=u'hello world')
+        response = requests.post(
+            '{}/xmldirector-set-metadata'.format(url),
+            data=json.dumps(data),
+            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+        self.assertEqual(response.status_code, 500)
+        self.assertTrue('API access disabled' in response.content)
 
     def test_search(self):
         response = self._make_one()
