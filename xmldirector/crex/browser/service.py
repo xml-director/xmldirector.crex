@@ -45,6 +45,7 @@ from collective.taskqueue import taskqueue
 ANNOTATION_KEY = 'xmldirector.plonecore.crex'
 SRC_PREFIX = 'src'
 
+
 class CRexConversionError(Exception):
     """ A generic C-Rex error """
 
@@ -68,7 +69,7 @@ def decode_json_payload(request):
         raise ValueError(u'Request body could not be decoded as JSON')
 
 
-def sha256_fp(fp, blocksize=2**20):
+def sha256_fp(fp, blocksize=2 ** 20):
     """ Calculate SHA256 hash for an open file(handle) """
 
     fp.seek(0)
@@ -200,7 +201,7 @@ class fs_filestream_iterator(object):
 
     implements(IStreamIterator)
 
-    def __init__(self, fs_handle, streamsize=1<<16):
+    def __init__(self, fs_handle, streamsize=1 << 16):
         self.streamsize = streamsize
         self.fs_handle = fs_handle
 
@@ -234,12 +235,12 @@ class BaseService(Service):
     def catalog(self):
         return plone.api.portal.get_tool('portal_catalog')
 
-
     @timed
     def render(self):
 
         if IConnector.providedBy(self.context) and not self.context.api_enabled:
-            raise ValueError('API access disabled for {}'.format(self.context.absolute_url))
+            raise ValueError('API access disabled for {}'.format(
+                self.context.absolute_url))
 
         try:
             return self._render()
@@ -440,7 +441,7 @@ class api_get_zip(BaseService):
 class api_get(BaseService):
 
     def _render(self):
-        
+
         check_permission(permissions.View, self.context)
         name = self.request.form.get('name')
         if not name:
@@ -492,7 +493,7 @@ class api_convert(BaseService):
 class api_list(BaseService):
 
     def _render(self):
-             
+
         check_permission(permissions.View, self.context)
 
         handle = self.context.webdav_handle(create_if_not_existing=True)
@@ -511,7 +512,8 @@ class api_list_full(BaseService):
         result = dict()
         for dirname in handle.walkdirs():
             for name, data in handle.ilistdirinfo(dirname, full=True):
-                data['modified_time'] = data['modified_time'].isoformat() # datetime not JSONifyable
+                # datetime not JSONifyable
+                data['modified_time'] = data['modified_time'].isoformat()
                 if handle.isfile(name):
                     with handle.open(name, 'rb') as fp:
                         data['sha256'] = sha256_fp(fp)
@@ -526,7 +528,7 @@ class api_hashes(BaseService):
         check_permission(permissions.View, self.context)
         handle = self.context.webdav_handle(create_if_not_existing=True)
         result = dict()
-        for name in handle.walkfiles(): 
+        for name in handle.walkfiles():
             if name.endswith('.sha256'):
                 continue
             result[name.lstrip('/')] = dict()
