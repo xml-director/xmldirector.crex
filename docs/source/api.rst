@@ -209,6 +209,68 @@ REST API documentation
 .. http:POST:: /path-to-connector/xmldirector-store
     
    Upload one or more files as multipart form-data request.
+   Please refer to https://en.wikipedia.org/wiki/MIME#Content-Type for details
+   about multipart/form-data requests. You must specify the ``filename`` for each
+   uploaded file. The ``filename`` might be a relative path which is preserved 
+   upon storage. All uploaded files will be stored on the server under the ``src``  
+   subfolder. All uploaded files **must** use the same 
+
+      names=files
+
+   parameter (see example request below).
+
+   Example of ``filename`` mapping:
+
+   - filename=some.png -> ``src/some.png``
+   - filename=my/images/some.png -> ``src/my/images/some.png``
+
+   XML Director will calculated a SHA256 has for all uploaded files and
+   stores them internally for efficient retrieval. The hashes of uploaded
+   files are exposed through the ``xmldirector-hashes`` and ``xmldirector-list-full``
+   API methods.
+
+   .. sourcecode:: http
+
+      PUT /xmldirector-store HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: multipart/form-data; boundary=---------------------------9051914041544843365972754266
+      Content-Length: 554
+      
+      -----------------------------9051914041544843365972754266
+      Content-Disposition: form-data; name="files"; filename="a.txt"
+      Content-Type: text/plain
+
+      Content of a.txt.
+
+      -----------------------------9051914041544843365972754266
+      Content-Disposition: form-data; name="files"; filename="a.html"
+      Content-Type: text/html
+
+      <!DOCTYPE html><title>Content of a.html.</title>
+
+      -----------------------------9051914041544843365972754266--
+
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: application/json
+      
+      {
+      }
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``multipart/form-data``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: upload successful
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
+
+
 
 .. http:POST:: /path-to-connector/xmldirector-store-zip
     
