@@ -275,7 +275,10 @@ REST API documentation
 .. http:POST:: /path-to-connector/xmldirector-store-zip
     
    Upload one or more files as ZIP archive. The ZIP archive
-   will be unpacked.
+   will be unpacked. The functionality is similar to ``xmldirector-store``.
+   except that the uploaded ZIP archive must be uploaded with query parameter
+   ``name=zipfile``. All unpacked files will be stored within the subfolder ``src``.
+   directory names are being preserved.
 
 
 .. http:GET:: /path-to-connector/xmldirector-list
