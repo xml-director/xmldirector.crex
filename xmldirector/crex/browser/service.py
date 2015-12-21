@@ -516,7 +516,7 @@ class api_list_full(BaseService):
         handle = self.context.webdav_handle(create_if_not_existing=True)
         result = dict()
         for dirname in handle.walkdirs():
-            for name, data in handle.ilistdirinfo(dirname, full=True):
+            for name, data in handle.ilistdirinfo(dirname, full=True, files_only=True):
                 if name.endswith('.sha256'):
                     continue
                 # datetime not JSONifyable
