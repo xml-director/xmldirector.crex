@@ -283,17 +283,117 @@ REST API documentation
 
 .. http:GET:: /path-to-connector/xmldirector-list
    
-   Retrieve a list of all stored files 
+   ``xmldirector-list`` retrieves list of all stored files. 
+
+   **Example request**:
+
+   .. sourcecode:: http
+
+      GET /plone/path/to/object/xmldirector-list HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: application/json
+
+      {u'files': [u'src/folder/3.txt',
+                  u'src/folder/1.txt',
+                  u'src/folder/2.txt']
+      }
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Success
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
+
    
 .. http:GET:: /path-to-connector/xmldirector-list-full
    
    Retrieve a list of all stored files including information about size, file mode
    and their SHA256 hash.
+
+   **Example request**:
+
+   .. sourcecode:: http
+
+      GET /plone/path/to/object/xmldirector-list-full HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: application/json
+
+
+      {u'src': {u'modified_time': u'2015-12-21T07:30:27', u'st_mode': 16832},
+       u'src/folder': {u'modified_time': u'2015-12-21T07:30:27', u'st_mode': 16832},
+       u'src/folder/1.txt': {u'modified_time': u'2015-12-21T07:30:27',
+                             u'sha256': u'a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447',
+                             u'size': 12,
+                             u'st_mode': 33216},
+       u'src/folder/2.txt': {u'modified_time': u'2015-12-21T07:30:27',
+                             u'sha256': u'6355baea1348fe93f7d9c0c56a5cfeff34682aeb6f24a61ce7b06fdb94927a8d',
+                             u'size': 24,
+                             u'st_mode': 33216},
+       u'src/folder/3.txt': {u'modified_time': u'2015-12-21T07:30:27',
+                             u'sha256': u'a8e82d2a65f75a68e82ea8835522dd67f1fede950bfedef9ccd1b2608dd70cb5',
+                             u'size': 20,
+                             u'st_mode': 33216},
+      }
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Success
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
    
 .. http:GET:: /path-to-connector/xmldirector-hashes
    
    Return all SHA256 hashes of all stored files.
    and their SHA256 hash.
+
+   **Example request**:
+
+   .. sourcecode:: http
+
+      GET /plone/path/to/object/xmldirector-hashes HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: application/json
+
+      {u'src/folder/1.txt': {u'sha256': u'a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447'},
+       u'src/folder/2.txt': {u'sha256': u'6355baea1348fe93f7d9c0c56a5cfeff34682aeb6f24a61ce7b06fdb94927a8d'},
+       u'src/folder/3.txt': {u'sha256': u'a8e82d2a65f75a68e82ea8835522dd67f1fede950bfedef9ccd1b2608dd70cb5'}}
+      }
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Success
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
 
 .. http:POST:: /path-to-connector/xmldirector-delete-content
    
