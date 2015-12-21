@@ -21,8 +21,11 @@ class RuleRewriter(object):
             mo = rule.src_compiled.search(path)
             if not mo:
                 continue
-            return re.sub(rule.src_compiled, rule.dest_compiled, path)
-        return path
+            replaced = re.sub(rule.src_compiled, rule.dest_compiled, path)
+            replaced = replaced.lstrip('/')
+            return replaced
+
+        return None # indicated: no patterns matching
 
 
 class Rule(object):
@@ -34,7 +37,10 @@ class Rule(object):
         self.dest_compiled = self.compile_dest(dest)
 
     def compile_src(self, pat):
-        return re.compile(pat)
+        try:
+            return re.compile(pat)
+        except re.error as e:
+            raise ValueError('Unable to compile rule "{}" ({})'.format(pat, e))
 
     def compile_dest(self, pat):
 
@@ -44,7 +50,8 @@ class Rule(object):
             return '\\{}'.format(group_no)
             
         pattern = re.compile(r'(\$\d*)', re.UNICODE)
-        return pattern.sub(replacer, pat)
+        pat2 = pattern.sub(replacer, pat)
+        return pat2
 
 
 if __name__ == '__main__':
