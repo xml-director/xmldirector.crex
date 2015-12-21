@@ -17,6 +17,10 @@ rules = [
     ('xxx/(.*)', 'hello/world/$1'),
 ]
 
+invalid_rules = [
+    ('((((.*).docx', 'out/$1.docx'),
+]
+
 
 class RuleRewriterTests(TestCase):
 
@@ -28,3 +32,8 @@ class RuleRewriterTests(TestCase):
         self.assertEqual(rw('src/hello/world/hello.png'), 'hello/world/hello.png')
         self.assertEqual(rw('xxx/dummy'), 'hello/world/dummy')
         self.assertEqual(rw('nix'), None)
+
+    def test_invalid_rules(self):
+
+        with self.assertRaises(ValueError):
+            rewriter = RuleRewriter(invalid_rules)
