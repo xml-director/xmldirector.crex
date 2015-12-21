@@ -1,7 +1,11 @@
 xmldirector.crex
 ================
 
-Integration of Plone, XML Director with C-REX (http://www.c-rex.net/app/).
+Integration of 
+
+- Plone (https://www.plone.org)
+- XML Director (https://www.xml-director.info) 
+- C-REX (http://www.c-rex.net/app/).
 
 This module provides 
 

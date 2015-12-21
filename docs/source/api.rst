@@ -1,5 +1,5 @@
-REST API documentation
-======================
+REST API
+========
 
 .. http:put:: /plone/xmldirector-create
 
