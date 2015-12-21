@@ -35,6 +35,7 @@ from ZPublisher.Iterators import IStreamIterator
 
 from xmldirector.crex.logger import LOG
 from xmldirector.crex.interfaces import ICRexSettings
+from xmldirector.crex.browser.rewriterules import RuleRewriter
 from xmldirector.plonecore.interfaces import IWebdavHandle
 from xmldirector.plonecore.connector import IConnector
 from zopyx.plone.persistentlogger.logger import IPersistentLogger
@@ -468,33 +469,6 @@ class api_get(BaseService):
             raise zExceptions.NotFound(u'Not found: {}'.format(name))
 
 
-class api_convert(BaseService):
-
-    def _render(self):
-
-        check_permission(permissions.ModifyPortalContent, self.context)
-        IPersistentLogger(self.context).log('convert')
-
-        handle = self.context.webdav_handle()
-        zip_tmp = temp_zip(suffix='.zip')
-        with fs.zipfs.ZipFS(zip_tmp, 'w') as zip_fp:
-            with zip_fp.open('word/index.docx', 'wb') as fp:
-                with handle.open('src/word/index.docx', 'rb') as fp_in:
-                    fp.write(fp_in.read())
-
-        with delete_after(zip_tmp):
-            zip_out = convert_crex(zip_tmp)
-        store_zip(self.context, zip_out, 'current')
-
-        with delete_after(zip_out):
-            self.request.response.setHeader(
-                'content-length', str(os.path.getsize(zip_out)))
-            self.request.response.setHeader('content-type', 'application/zip')
-            self.request.response.setHeader(
-                'content-disposition', 'attachment; filename={}.zip'.format(self.context.getId()))
-            return filestream_iterator(zip_out)
-
-
 class api_list(BaseService):
 
     def _render(self):
@@ -589,3 +563,44 @@ class api_delete_content(BaseService):
             else:
                 result[name] = u'not found'
         return result
+
+
+class api_convert(BaseService):
+
+    def _render(self):
+
+        check_permission(permissions.ModifyPortalContent, self.context)
+        IPersistentLogger(self.context).log('convert')
+        payload = decode_json_payload(self.request)
+        
+        if 'mapping' not in payload:
+            raise ValueError('No "mapping" found in JSON payload')
+
+        rules = payload['mapping']
+        rewriter = RuleRewriter(rules)
+
+        handle = self.context.webdav_handle()
+        zip_tmp = temp_zip(suffix='.zip')
+        with fs.zipfs.ZipFS(zip_tmp, 'w') as zip_fp:
+            for name in handle.walkfiles():
+                if name.endswith('.sha256'):
+                    continue
+                name_in_zip = rewriter.rewrite(name)
+                if name_in_zip:
+                    with handle.open(name, 'rb') as fp_in, \
+                         zip_fp.open(name_in_zip, 'wb') as fp:
+                         fp.write(fp_in.read())
+
+        with delete_after(zip_tmp):
+            zip_out = convert_crex(zip_tmp)
+        store_zip(self.context, zip_out, 'current')
+
+        with delete_after(zip_out):
+            self.request.response.setHeader(
+                'content-length', str(os.path.getsize(zip_out)))
+            self.request.response.setHeader('content-type', 'application/zip')
+            self.request.response.setHeader(
+                'content-disposition', 'attachment; filename={}.zip'.format(self.context.getId()))
+            return filestream_iterator(zip_out)
+
+
