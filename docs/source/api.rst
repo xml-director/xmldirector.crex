@@ -200,11 +200,69 @@ REST API documentation
 
 .. http:GET:: /path-to-connector/xmldirector-get
     
-   Retrieve a single file by path
+   Retrieve a single file by path.
+
+   **Example request**:
+
+   .. sourcecode:: http
+
+      GET /plone/some/path/xmldirector-get?name=src/sample.docx HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Content-Disposition: attachment; filename=sample.docx'
+      Content-Length: 89796
+      Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+      <binary data in response body>
+
+   :query string name: name of file to be retrieved
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Get operation successful
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
+
+
 
 .. http:GET:: /path-to-connector/xmldirector-get-zip
     
-   Retrieve all files as ZIP file
+   Retrieve all files as ZIP file.
+
+   **Example request**:
+
+   .. sourcecode:: http
+
+      GET /plone/some/path/xmldirector-get-zip HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Content-Disposition: attachment; filename=some-id.zip'
+      Content-Length: 89796
+      Content-Type: application/zip
+
+      <binary ZIP data in response body>
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Get operation successful
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
 
 .. http:POST:: /path-to-connector/xmldirector-store
     
