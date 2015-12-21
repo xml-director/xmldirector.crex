@@ -604,3 +604,7 @@ class api_convert(BaseService):
             return filestream_iterator(zip_out)
 
 
+class api_test(BaseService):
+
+    def _render(self):
+        return {'a' : 'b'}
