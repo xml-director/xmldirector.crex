@@ -463,9 +463,9 @@ REST API documentation
 
 .. http:POST:: /path-to-connector/xmldirector-delete-content
    
-   Delete one or more items from the storage.
+   Delete one or more items from the storage...to be written
 
 .. http:POST:: /path-to-connector/xmldirector-convert
    
-   Start CRex conversion....to be written
+   Start CRex conversion...to be written
    
