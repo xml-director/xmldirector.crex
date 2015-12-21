@@ -212,12 +212,15 @@ REST API documentation
    Please refer to https://en.wikipedia.org/wiki/MIME#Content-Type for details
    about multipart/form-data requests. You must specify the ``filename`` for each
    uploaded file. The ``filename`` might be a relative path which is preserved 
-   upon storage. All uploaded files will be stored on the server under the ``src``  
-   subfolder. All uploaded files **must** use the same 
+   upon storage. 
+   
+   .. note::
+       All uploaded files will be stored on the server under the ``src``  
+       subfolder. All uploaded files **must** use the same ``name`` parameter
+       within the POST body (see example below)::
 
-      names=files
+          name=files
 
-   parameter (see example request below).
 
    Example of ``filename`` mapping:
 
@@ -228,6 +231,11 @@ REST API documentation
    stores them internally for efficient retrieval. The hashes of uploaded
    files are exposed through the ``xmldirector-hashes`` and ``xmldirector-list-full``
    API methods.
+
+   **Example request**:
+
+   Uploaded files files ``a.txt`` and ``a.html`` will be stored as ``src/a.txt`` and ``src/a.html``.
+
 
    .. sourcecode:: http
 
@@ -401,5 +409,5 @@ REST API documentation
 
 .. http:POST:: /path-to-connector/xmldirector-convert
    
-   Start CRex conversion.
+   Start CRex conversion....to be written
    
