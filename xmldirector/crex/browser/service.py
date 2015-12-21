@@ -417,7 +417,7 @@ class api_store_zip(BaseService):
 class api_get_zip(BaseService):
 
     def _render(self):
-
+        
         check_permission(permissions.ModifyPortalContent, self.context)
 
         handle = self.context.webdav_handle(create_if_not_existing=True)
@@ -498,7 +498,7 @@ class api_list(BaseService):
 
         handle = self.context.webdav_handle(create_if_not_existing=True)
         files = list(handle.walkfiles())
-        files = [fn.lstrip('/') for fn in files]
+        files = [fn.lstrip('/') for fn in files if not fn.endswith('.sha256')]
         return dict(files=files)
 
 
@@ -512,6 +512,8 @@ class api_list_full(BaseService):
         result = dict()
         for dirname in handle.walkdirs():
             for name, data in handle.ilistdirinfo(dirname, full=True):
+                if name.endswith('.sha256'):
+                    continue
                 # datetime not JSONifyable
                 data['modified_time'] = data['modified_time'].isoformat()
                 if handle.isfile(name):
