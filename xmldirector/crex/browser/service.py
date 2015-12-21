@@ -89,15 +89,17 @@ def store_zip(context, zip_filename, target_directory):
     if handle.exists(target_directory):
         handle.removedir(target_directory, recursive=True, force=True)
     handle.makedir(target_directory)
+    result = dict(mapping=dict())
     with fs.zipfs.ZipFS(zip_filename, 'r') as zip_in:
         for name in zip_in.walkfiles():
             target_path = '{}/{}'.format(target_directory,
                                          name.replace('/result/', ''))
             handle.ensuredir(target_path)
+            result['mapping'][name] = target_path
             with handle.open(target_path, 'wb') as fp_out:
                 with zip_in.open(name, 'rb') as fp_in:
                     fp_out.write(fp_in.read())
-
+    return result
 
 @contextmanager
 def delete_after(filename):
@@ -400,9 +402,11 @@ class api_store_zip(BaseService):
             fp.write(self.request.form['zipfile'].read())
 
         # and unpack it
+        result = dict(mapping=dict())
         with delete_after(zip_out):
             with fs.zipfs.ZipFS(zip_out, 'r') as zip_handle:
                 for name in zip_handle.walkfiles():
+                    name = name.lstrip('/')
                     dest_name = '{}/{}'.format(target_dir, name)
                     webdav_handle.ensuredir(dest_name)
                     data = zip_handle.open(name, 'rb').read()
@@ -410,8 +414,9 @@ class api_store_zip(BaseService):
                         fp.write(data)
                     with webdav_handle.open(dest_name + '.sha256', 'wb') as fp:
                         fp.write(hashlib.sha256(data).hexdigest())
+                    result['mapping'][name] = dest_name
 
-        return dict(msg=u'Saved')
+        return result
 
 
 class api_get_zip(BaseService):

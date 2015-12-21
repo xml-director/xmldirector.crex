@@ -168,6 +168,10 @@ class TestCRexAPI(TestBase):
             headers={'Accept': 'application/json'},
             auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
         self.assertEqual(response.status_code, 200)
+        mapping = response.json()['mapping']
+        self.assertEqual(mapping['folder/1.txt'], 'src/folder/1.txt')
+        self.assertEqual(mapping['folder/2.txt'], 'src/folder/2.txt')
+        self.assertEqual(mapping['folder/3.txt'], 'src/folder/3.txt')
 
         response = requests.get(
             '{}/xmldirector-get-zip'.format(url),
