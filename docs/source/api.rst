@@ -231,8 +231,6 @@ REST API
    :statuscode 403: unauthorized
    :statuscode 404: not found
 
-
-
 .. http:GET:: /path-to-connector/xmldirector-get-zip
     
    Retrieve all files as ZIP file.
@@ -467,5 +465,99 @@ REST API
 
 .. http:POST:: /path-to-connector/xmldirector-convert
    
-   Start CRex conversion...to be written
+   Start a synchronous conversion against the C-Rex web-service (www.c-rex.net).
+
+   The request must contain a ``mapping`` rule set that specifies the files to be
+   included with the ZIP file to be send to the C-Rex service. The ``mapping`` 
+   mechanism allows you to transform the paths of files as they exist on the server
+   into a different path with in the ZIP file. The mechanism is based on the idea
+   of the Apache Rewrite module for rewriting incoming request URLs (see
+   http://httpd.apache.org/docs/2.0/misc/rewriteguide.html for details).
+
+
+   All regular expression groups (regular expression patterns grouped in ``(...)``
+   parentheses relate to ``$1``, ``$2`` etc. within the target expression.
+
+   **Example 1**
+
+    A rule
+
+    .. code-block:: text
+
+      [ "src/(.*)", "$1" ]
+
+    will include files within the ``src`` folder into the ZIP file and chop of
+    the leading ``src`` directory:
+
+    .. code-block:: text
+
+      src/myfiles/foo.png -> myfiles/foo.png
+
+
+   **Example 2**
+
+    A rule
+
+    .. code-block:: text
+
+      [ "src/(.*)/word/(.*).docx", "$1/$2.docx" ]
+
+    will map ``.docx`` files into a new hierarchy
+
+    .. code-block:: text
+
+      src/files/word/foo.docx     -> files/foo.docx
+      src/morefiles/word/bar.docx -> morefiles/bar.docx
+
+   **Example 3**
+
+    A rule
+
+    .. code-block:: text
+
+      [ "src/(.*)/word/(.*).docx", "files/$2.docx" ]
+
+    will map ``.docx`` files into a new hierarchy ``files``
+
+    .. code-block:: text
+
+      src/files/word/foo.docx     -> files/foo.docx
+      src/morefiles/word/bar.docx -> files.docx
+
+   C-Rex will return a ZIP file with the converted data. The ZIP file will be unpacked
+   within the top-level ``current`` directory within the CMS. In addition the ZIP file
+   is returned with the HTTP response.
+   
+   **Example request**:
+
+   .. sourcecode:: http
+
+      POST /plone/path/to/object/xmldirector-convert HTTP/1.1
+      Host: example.com
+      Accept: application/json
+      Content-Type: application/json
+
+      {
+          "mapping": [
+              [ "src/(.*)", "$1" ]
+          ]
+      }
+
+   **Example response**:
+
+   .. sourcecode:: http
+
+      HTTP/1.1 200 OK
+      Vary: Accept
+      Content-Type: application/zip
+
+      <binary ZIP data>
+
+
+   :reqheader Accept: must be ``application/json``
+   :reqheader Content-Type: must be ``application/json``
+   :reqheader Authorization: HTTP basic authentication
+   :statuscode 200: Success
+   :statuscode 403: unauthorized
+   :statuscode 404: not found
    
