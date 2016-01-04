@@ -13,4 +13,3 @@ class Queue(BrowserView):
 
     def queue(self):
         print 'INSIDE QUEUE'
-        import pdb; pdb.set_trace() 
