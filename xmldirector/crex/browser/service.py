@@ -604,7 +604,17 @@ class api_convert(BaseService):
             return filestream_iterator(zip_out)
 
 
-class api_test(BaseService):
+class api_convert_async(BaseService):
 
     def _render(self):
-        return {'a' : 'b'}
+
+        task_id = taskqueue.add(
+                url=self.context.absolute_url(1) + '/xmldirector-convert', 
+                method=self.request.REQUEST_METHOD,
+                headers={'accept': 'application/json', 'content-type': 'application/json'},
+                payload=self.request.BODY,
+                params=dict(status=u'async', msg=u'Queued')
+                )
+        print task_id
+        return {'msg': 'scheduled'}
+
