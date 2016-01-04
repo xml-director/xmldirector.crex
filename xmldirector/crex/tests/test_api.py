@@ -256,13 +256,13 @@ class TestCRexAPI(TestBase):
         self.assertEqual(payload['src/folder/2.txt'], u'removed')
         self.assertEqual(payload['xxx'], u'not found')
     
-    def test_test(self):
-        response = self._make_one()
-        self.assertEqual(response.status_code, 201)
-        url = response.json()['url']
-
-        response = requests.get(
-            '{}/xmldirector/test'.format(url),
-            headers={'Accept': 'application/json', 'content-type': 'application/json'},
-            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
-        self.assertEqual(response.status_code, 200)
+#    def test_test(self):
+#        response = self._make_one()
+#        self.assertEqual(response.status_code, 201)
+#        url = response.json()['url']
+#
+#        response = requests.get(
+#            '{}/xmldirector/test'.format(url),
+#            headers={'Accept': 'application/json', 'content-type': 'application/json'},
+#            auth=(SITE_OWNER_NAME, SITE_OWNER_PASSWORD))
+#        self.assertEqual(response.status_code, 200)
