@@ -135,13 +135,18 @@
         name="xmldirector-delete-content"
     />
 
-    <!-- UNTESTED -->
-
     <plone:service
       method="POST"
         for="xmldirector.plonecore.connector.IConnector"
         factory=".service.api_convert"
         name="xmldirector-convert"
+    />
+
+    <plone:service
+      method="POST"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_convert_async"
+        name="xmldirector-convert-async"
     />
 
 </configure>
