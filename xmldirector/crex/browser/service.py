@@ -22,6 +22,7 @@ from contextlib import contextmanager
 
 import plone.api
 import zExceptions
+import transaction
 from plone.rest import Service
 from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
@@ -44,6 +45,13 @@ from collective.taskqueue import taskqueue
 
 
 ANNOTATION_KEY = 'xmldirector.plonecore.crex'
+ANNOTATION_CREX_INFO_KEY = 'xmldirector.plonecore.crex.queue'
+
+CREX_STATUS_PENDING = u'pending'
+CREX_STATUS_RUNNING = u'running'
+CREX_STATUS_ERROR = u'error'
+CREX_STATUS_SUCCESS = u'success'
+
 SRC_PREFIX = 'src'
 
 
@@ -101,6 +109,7 @@ def store_zip(context, zip_filename, target_directory):
                 with zip_in.open(name, 'rb') as fp_in:
                     fp_out.write(fp_in.read())
     return result
+
 
 @contextmanager
 def delete_after(filename):
@@ -251,6 +260,14 @@ class BaseService(Service):
             LOG.error(self.request.text())
             LOG.error(e, exc_info=True)
             raise e
+
+    def get_crex_info(self):
+        annotations = IAnnotations(self.context)
+        return annotations.get(ANNOTATION_CREX_INFO_KEY, {})
+        
+    def set_crex_info(self, info):
+        annotations = IAnnotations(self.context)
+        annotations[ANNOTATION_CREX_INFO_KEY] = info
 
 
 class api_create(BaseService):
@@ -570,6 +587,31 @@ class api_convert(BaseService):
     def _render(self):
 
         check_permission(permissions.ModifyPortalContent, self.context)
+
+        conversion_info = self.get_crex_info()
+        conversion_info['status'] = CREX_STATUS_RUNNING
+        conversion_info['running_since'] = datetime.datetime.utcnow().isoformat()
+        self.set_crex_info(conversion_info)
+        transaction.commit()
+
+        try:
+            result = self._render2() 
+            conversion_info['status'] = CREX_STATUS_SUCCESS
+            conversion_info['terminated'] = datetime.datetime.utcnow().isoformat()
+            self.set_crex_info(conversion_info)
+            return result
+        except Exception as e:
+            LOG.error(e, exc_info=True)
+            conversion_info['status'] = CREX_STATUS_ERROR
+            conversion_info['terminated'] = datetime.datetime.utcnow().isoformat()
+            conversion_info['error'] = str(e)
+            self.set_crex_info(conversion_info)
+            transaction.commit()
+            raise
+
+
+    def _render2(self):
+
         IPersistentLogger(self.context).log('convert')
         payload = decode_json_payload(self.request)
         
@@ -595,6 +637,10 @@ class api_convert(BaseService):
             zip_out = convert_crex(zip_tmp)
         store_zip(self.context, zip_out, 'current')
 
+        conversion_info = self.get_crex_info()
+        conversion_info['status'] = CREX_STATUS_SUCCESS
+        self.set_crex_info(conversion_info)
+
         with delete_after(zip_out):
             self.request.response.setHeader(
                 'content-length', str(os.path.getsize(zip_out)))
@@ -608,13 +654,31 @@ class api_convert_async(BaseService):
 
     def _render(self):
 
-        task_id = taskqueue.add(
-                url=self.context.absolute_url(1) + '/xmldirector-convert', 
-                method=self.request.REQUEST_METHOD,
-                headers={'accept': 'application/json', 'content-type': 'application/json'},
-                payload=self.request.BODY,
-                params=dict(status=u'async', msg=u'Queued')
-                )
-        print task_id
-        return {'msg': 'scheduled'}
+        conversion_information = self.get_crex_info()
+        status = conversion_information.get('status')
+        if not status or status in (CREX_STATUS_ERROR, CREX_STATUS_SUCCESS):
+            task_id = taskqueue.add(
+                    url=self.context.absolute_url(1) + '/xmldirector-convert', 
+                    method=self.request.REQUEST_METHOD,
+                    headers={'accept': 'application/json', 'content-type': 'application/json'},
+                    payload=self.request.BODY,
+                    params=dict(status=u'async', msg=u'Queued')
+                    )
+            data = {'task_id': task_id, 
+                    'created': datetime.datetime.utcnow().isoformat(),
+                    'creator': plone.api.user.get_current().getUserName(),
+                    'status': u'spooled'}
+            self.set_crex_info(data)
+            return data
+        else:
+            self.request.response.setStatus(409) # Conflict
+            data = conversion_information.copy()
+            data['msg'] = u'Conversion request could not be spooled'
+            return data
 
+
+class api_convert_status(BaseService):
+
+    def _render(self):
+
+        return self.get_crex_info()

@@ -149,4 +149,11 @@
         name="xmldirector-convert-async"
     />
 
+    <plone:service
+      method="GET"
+        for="xmldirector.plonecore.connector.IConnector"
+        factory=".service.api_convert_status"
+        name="xmldirector-convert-status"
+    />
+
 </configure>
