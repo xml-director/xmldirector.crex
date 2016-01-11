@@ -116,7 +116,7 @@ for i in range(80):
     result = send_request('GET', 'xmldirector-convert-status', url=url)
     print result.json()
     import time
-    time.sleep(1)
+    time.sleep(5)
 
 
 #result = send_request('POST', 'xmldirector-convert-async', url=url, data=json.dumps(data))
