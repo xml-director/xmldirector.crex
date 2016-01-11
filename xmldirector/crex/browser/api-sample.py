@@ -81,9 +81,10 @@ print (url)
 
 print '-' * 80
 print 'UPLOAD DOCX'
-force_files = dict(zipfile=open('crex.zip', 'rb')) 
+force_files = dict(zipfile=open('crex.zip', 'rb'))
 print url
-result = send_request('POST', 'xmldirector-store-zip', force_files=force_files, url=url, no_json=True)
+result = send_request('POST', 'xmldirector-store-zip',
+                      force_files=force_files, url=url, no_json=True)
 verify_result(result)
 data = result.json()
 pprint.pprint(data)
@@ -106,10 +107,11 @@ pprint.pprint(data)
 print '-' * 80
 print 'PUT CONVERT ASYNC'
 data = dict(
-mapping=[
-('src/(.*)', '$1')
-])
-result = send_request('POST', 'xmldirector-convert-async', url=url, data=json.dumps(data))
+    mapping=[
+        ('src/(.*)', '$1')
+    ])
+result = send_request('POST', 'xmldirector-convert-async',
+                      url=url, data=json.dumps(data))
 print result.json()
 
 for i in range(80):
@@ -120,16 +122,16 @@ for i in range(80):
 
 
 #result = send_request('POST', 'xmldirector-convert-async', url=url, data=json.dumps(data))
-#print result.json()
+# print result.json()
 
-#print '-' * 80
-#print 'PUT CONVERT'
-#data = dict(
-#mapping=[
+# print '-' * 80
+# print 'PUT CONVERT'
+# data = dict(
+# mapping=[
 #('src/(.*)', '$1')
 #])
 #result = send_request('POST', 'xmldirector-convert', url=url, data=json.dumps(data))
-#with open('out.zip', 'wb') as fp:
+# with open('out.zip', 'wb') as fp:
 #    fp.write(result.content)
 
 print '-' * 80
