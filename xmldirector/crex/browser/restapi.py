@@ -7,44 +7,30 @@
 
 
 import os
-import json
 import time
 import furl
-import uuid
-import hashlib
 import datetime
-import tempfile
 import requests
-import fnmatch
-import mimetypes
 import fs.zipfs
-from contextlib import contextmanager
 
 import plone.api
-import zExceptions
 import transaction
-from plone.rest import Service
 from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
 from zope.annotation.interfaces import IAnnotations
-from zope.interface import implements
-from AccessControl import Unauthorized
-from AccessControl import getSecurityManager
 from Products.CMFCore import permissions
 from ZPublisher.Iterators import filestream_iterator
-from ZPublisher.Iterators import IStreamIterator
 
 from xmldirector.crex.logger import LOG
 from xmldirector.crex.interfaces import ICRexSettings
 from xmldirector.crex.browser.rewriterules import RuleRewriter
-from xmldirector.plonecore.interfaces import IWebdavHandle
-from xmldirector.plonecore.connector import IConnector
 from zopyx.plone.persistentlogger.logger import IPersistentLogger
 
 from xmldirector.plonecore.browser.restapi import temp_zip
 from xmldirector.plonecore.browser.restapi import delete_after
 from xmldirector.plonecore.browser.restapi import BaseService
 from xmldirector.plonecore.browser.restapi import check_permission
+from xmldirector.plonecore.browser.restapi import store_zip
 from xmldirector.plonecore.browser.restapi import decode_json_payload
 
 from collective.taskqueue import taskqueue
@@ -138,7 +124,7 @@ class BaseService(BaseService):
     def get_crex_info(self):
         annotations = IAnnotations(self.context)
         return annotations.get(ANNOTATION_CREX_INFO_KEY, {})
-        
+
     def set_crex_info(self, info):
         annotations = IAnnotations(self.context)
         annotations[ANNOTATION_CREX_INFO_KEY] = info
@@ -152,31 +138,33 @@ class api_convert(BaseService):
 
         conversion_info = self.get_crex_info()
         conversion_info['status'] = CREX_STATUS_RUNNING
-        conversion_info['running_since'] = datetime.datetime.utcnow().isoformat()
+        conversion_info[
+            'running_since'] = datetime.datetime.utcnow().isoformat()
         self.set_crex_info(conversion_info)
         transaction.commit()
 
         try:
-            result = self._render2() 
+            result = self._render2()
             conversion_info['status'] = CREX_STATUS_SUCCESS
-            conversion_info['terminated'] = datetime.datetime.utcnow().isoformat()
+            conversion_info[
+                'terminated'] = datetime.datetime.utcnow().isoformat()
             self.set_crex_info(conversion_info)
             return result
         except Exception as e:
             LOG.error(e, exc_info=True)
             conversion_info['status'] = CREX_STATUS_ERROR
-            conversion_info['terminated'] = datetime.datetime.utcnow().isoformat()
+            conversion_info[
+                'terminated'] = datetime.datetime.utcnow().isoformat()
             conversion_info['error'] = str(e)
             self.set_crex_info(conversion_info)
             transaction.commit()
             raise
 
-
     def _render2(self):
 
         IPersistentLogger(self.context).log('convert')
         payload = decode_json_payload(self.request)
-        
+
         if 'mapping' not in payload:
             raise ValueError('No "mapping" found in JSON payload')
 
@@ -192,8 +180,8 @@ class api_convert(BaseService):
                 name_in_zip = rewriter.rewrite(name)
                 if name_in_zip:
                     with handle.open(name, 'rb') as fp_in, \
-                         zip_fp.open(name_in_zip, 'wb') as fp:
-                         fp.write(fp_in.read())
+                            zip_fp.open(name_in_zip, 'wb') as fp:
+                        fp.write(fp_in.read())
 
         with delete_after(zip_tmp):
             zip_out = convert_crex(zip_tmp)
@@ -220,20 +208,21 @@ class api_convert_async(BaseService):
         status = conversion_information.get('status')
         if not status or status in (CREX_STATUS_ERROR, CREX_STATUS_SUCCESS):
             task_id = taskqueue.add(
-                    url=self.context.absolute_url(1) + '/xmldirector-convert', 
-                    method=self.request.REQUEST_METHOD,
-                    headers={'accept': 'application/json', 'content-type': 'application/json'},
-                    payload=self.request.BODY,
-                    params=dict(status=u'async', msg=u'Queued')
-                    )
-            data = {'task_id': task_id, 
+                url=self.context.absolute_url(1) + '/xmldirector-convert',
+                method=self.request.REQUEST_METHOD,
+                headers={'accept': 'application/json',
+                         'content-type': 'application/json'},
+                payload=self.request.BODY,
+                params=dict(status=u'async', msg=u'Queued')
+            )
+            data = {'task_id': task_id,
                     'created': datetime.datetime.utcnow().isoformat(),
                     'creator': plone.api.user.get_current().getUserName(),
                     'status': u'spooled'}
             self.set_crex_info(data)
             return data
         else:
-            self.request.response.setStatus(409) # Conflict
+            self.request.response.setStatus(409)  # Conflict
             data = conversion_information.copy()
             data['msg'] = u'Conversion request could not be spooled'
             return data

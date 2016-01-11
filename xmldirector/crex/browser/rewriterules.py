@@ -14,7 +14,6 @@ class RuleRewriter(object):
     def __init__(self, rules):
         self.rules = [Rule(*rule) for rule in rules]
 
-
     def rewrite(self, path):
 
         for rule in self.rules:
@@ -25,7 +24,7 @@ class RuleRewriter(object):
             replaced = replaced.lstrip('/')
             return replaced
 
-        return None # indicated: no patterns matching
+        return None  # indicated: no patterns matching
 
 
 class Rule(object):
@@ -48,7 +47,7 @@ class Rule(object):
             pattern = mo.group(0)
             group_no = pattern.lstrip('$')
             return '\\{}'.format(group_no)
-            
+
         pattern = re.compile(r'(\$\d*)', re.UNICODE)
         pat2 = pattern.sub(replacer, pat)
         return pat2
@@ -73,6 +72,6 @@ if __name__ == '__main__':
 
     rewriter = RuleRewriter(rules)
     for path in paths:
-        print '-'*80
+        print '-' * 80
         print path
         print rewriter.rewrite(path)
