@@ -8,7 +8,7 @@
 
 import os
 import tempfile
-from xmldirector.crex.browser import service
+from xmldirector.crex.browser import restapi 
 
 from Products.Five.browser import BrowserView
 
