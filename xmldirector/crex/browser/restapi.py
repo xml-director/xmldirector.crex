@@ -48,7 +48,7 @@ class CRexConversionError(Exception):
     """ A generic C-Rex error """
 
 
-def convert_crex(zip_path):
+def convert_crex(zip_path, crex_url=None, crex_username=None, crex_password=None):
     """ Send ZIP archive with content to be converted to C-Rex.
         Returns name of ZIP file with converted resources.
     """
@@ -57,19 +57,24 @@ def convert_crex(zip_path):
     registry = getUtility(IRegistry)
     settings = registry.forInterface(ICRexSettings)
 
-    # Fetch authentication token if necessary (older than one hour)
+    crex_conversion_url = crex_url or settings.crex_conversion_url
+    crex_conversion_username = crex_username or settings.crex_conversion_username
+    crex_conversion_password = crex_password or settings.crex_conversion_password
     crex_token = settings.crex_conversion_token
+
+    # Fetch authentication token if necessary (older than one hour)
     crex_token_last_fetched = settings.crex_conversion_token_last_fetched or datetime.datetime(
         2000, 1, 1)
     diff = datetime.datetime.utcnow() - crex_token_last_fetched
+
     if not crex_token or diff.total_seconds() > 3600:
-        f = furl.furl(settings.crex_conversion_url)
+        f = furl.furl(crex_conversion_url)
         token_url = '{}://{}/api/Token'.format(
-            f.scheme, f.host, settings.crex_conversion_url)
+            f.scheme, f.host, crex_conversion_url)
         headers = {'content-type': 'application/x-www-form-urlencoded'}
         params = dict(
-            username=settings.crex_conversion_username,
-            password=settings.crex_conversion_password,
+            username=crex_conversion_username,
+            password=crex_conversion_password,
             grant_type='password')
         result = requests.post(token_url, data=params, headers=headers)
         if result.status_code != 200:
@@ -92,7 +97,7 @@ def convert_crex(zip_path):
             LOG.info(u'Starting C-Rex conversion of {}, size {} '.format(zip_path,
                                                                          os.path.getsize(zip_path)))
             result = requests.post(
-                settings.crex_conversion_url, files=dict(source=fp), headers=headers)
+                crex_conversion_url, files=dict(source=fp), headers=headers)
         except requests.ConnectionError:
             msg = u'Connection to C-REX webservice failed'
             raise CRexConversionError(msg)
