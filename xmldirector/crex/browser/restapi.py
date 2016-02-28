@@ -29,7 +29,6 @@ from zopyx.plone.persistentlogger.logger import IPersistentLogger
 from xmldirector.plonecore.browser.restapi import temp_zip
 from xmldirector.plonecore.browser.restapi import delete_after
 from xmldirector.plonecore.browser.restapi import BaseService
-from xmldirector.plonecore.browser.restapi import check_permission
 from xmldirector.plonecore.browser.restapi import store_zip
 from xmldirector.plonecore.browser.restapi import decode_json_payload
 
@@ -138,8 +137,6 @@ class BaseService(BaseService):
 class api_convert(BaseService):
 
     def _render(self):
-
-        check_permission(permissions.ModifyPortalContent, self.context)
 
         conversion_info = self.get_crex_info()
         conversion_info['status'] = CREX_STATUS_RUNNING
