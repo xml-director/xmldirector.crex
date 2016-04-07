@@ -78,6 +78,9 @@ class CREX(BrowserView):
         endpoint_url = ENDPOINTS[endpoint]['url']
         handle = self.context.get_handle()
 
+        if not handle.exists('src/index.docx'):
+            raise ValueError('No file src/index.docx found')
+
         zip_tmp = tempfile.mktemp(suffix='.zip')
         with fs.zipfs.ZipFS(zip_tmp, 'w') as zip_fp:
             with zip_fp.open('src/index.docx', 'wb') as fp_out:

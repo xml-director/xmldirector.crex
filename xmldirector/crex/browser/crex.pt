@@ -79,7 +79,7 @@
 
         <div class="right">
             <label i18n:translate="">Source files</label>
-            <a tal:attributes="href string:${context/absolute_url}/@@bookalope-cleanup-sources"
+            <a tal:attributes="href string:${context/absolute_url}/@@crex-cleanup-sources"
                 i18n:translate="">
                 Cleanup source files
             </a>
