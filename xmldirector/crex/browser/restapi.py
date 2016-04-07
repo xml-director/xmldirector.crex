@@ -9,6 +9,7 @@
 import os
 import time
 import furl
+from collections import OrderedDict
 import datetime
 import requests
 import fs.zipfs
@@ -41,6 +42,18 @@ CREX_STATUS_PENDING = u'pending'
 CREX_STATUS_RUNNING = u'running'
 CREX_STATUS_ERROR = u'error'
 CREX_STATUS_SUCCESS = u'success'
+
+
+ENDPOINTS = OrderedDict()
+ENDPOINTS['docx2onkopedia'] = \
+        dict(url='https://www.c-rex.net/api/XBot/Convert//Demo.XmlDirector/XmlDirector',
+             title=u'DOCX to Onkopedia XML')
+ENDPOINTS['docx2ditatopic'] = \
+        dict(url='https://www.c-rex.net/api/XBot/Convert/Demo/docx2DITATopic',
+             title=u'DOCX2 to DITA topic')
+ENDPOINTS['docx2ditamap'] = \
+        dict(url='https://www.c-rex.net/api/XBot/Convert/Demo/docx2DITAMap',
+             title=u'DOCX2 to DITA topic')
 
 
 class CRexConversionError(Exception):
@@ -171,6 +184,8 @@ class api_convert(BaseService):
             raise ValueError('No "mapping" found in JSON payload')
 
         rules = payload['mapping']
+        conversion_id = payload.get('converter', 'docx2ditatopic')
+        conversion_endpoint_url = ENDPOINTS[conversion_id]['url']
         rewriter = RuleRewriter(rules)
 
         handle = self.context.webdav_handle()
@@ -185,8 +200,9 @@ class api_convert(BaseService):
                             zip_fp.open(name_in_zip, 'wb') as fp:
                         fp.write(fp_in.read())
 
+        
         with delete_after(zip_tmp):
-            zip_out = convert_crex(zip_tmp)
+            zip_out = convert_crex(zip_tmp, crex_url=conversion_endpoint_url)
         store_zip(self.context, zip_out, 'current')
 
         conversion_info = self.get_crex_info()

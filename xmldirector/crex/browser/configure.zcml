@@ -9,6 +9,46 @@
     >
 
     <browser:page
+        name="xmldirector-crex"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".view.CREX"
+        template="crex.pt"
+        permission="cmf.ModifyPortalContent"
+    />
+
+    <browser:page
+        name="crex-upload-source"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".view.CREX"
+        attribute="upload_source"
+        permission="cmf.ModifyPortalContent"
+    />
+
+    <browser:page
+        name="crex-cleanup"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".view.CREX"
+        attribute="cleanup_generated_files"
+        permission="cmf.ModifyPortalContent"
+    />
+    
+    <browser:page
+        name="crex-cleanup-sources"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".view.CREX"
+        attribute="cleanup_source_files"
+        permission="cmf.ModifyPortalContent"
+    />
+
+    <browser:page
+        name="crex-convert"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".view.CREX"
+        attribute="convert"
+        permission="cmf.ModifyPortalContent"
+    />
+
+    <browser:page
         name="xmldirector-test"
         for="*"
         class=".queue.Queue"
