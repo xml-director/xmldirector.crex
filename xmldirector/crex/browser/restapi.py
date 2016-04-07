@@ -50,10 +50,10 @@ ENDPOINTS['docx2onkopedia'] = \
              title=u'DOCX to Onkopedia XML')
 ENDPOINTS['docx2ditatopic'] = \
         dict(url='https://www.c-rex.net/api/XBot/Convert/Demo/docx2DITATopic',
-             title=u'DOCX2 to DITA topic')
+             title=u'DOCX to DITA topic')
 ENDPOINTS['docx2ditamap'] = \
         dict(url='https://www.c-rex.net/api/XBot/Convert/Demo/docx2DITAMap',
-             title=u'DOCX2 to DITA topic')
+             title=u'DOCX to DITA map')
 
 
 class CRexConversionError(Exception):
